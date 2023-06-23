@@ -1,0 +1,6 @@
+[submodule "uplift"]
+	path = uplift
+	url = git@github.com:kjetilv/uplift.git
+[submodule "taninim"]
+	path = taninim
+	url = git@github.com:kjetilv/taninim.git
