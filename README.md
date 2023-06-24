@@ -8,4 +8,4 @@ Builds Java applications to native Linux binaries and deploys them as AWS Lambda
 
 # [taninim](https://github.com/kjetilv/taninim)
 
-A simple, S3-based streaming service running on Lambda with Facebook for authentication
+A simple, S3-based streaming service running on Lambda with Facebook for authentication.
