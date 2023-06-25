@@ -30,8 +30,4 @@ jobs:
       - name: Build uplift
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: uplift:build
-      - name: Build taninim
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: taninim:build
+          arguments: uplift:build taninim:build
