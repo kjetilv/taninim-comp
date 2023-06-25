@@ -12,3 +12,8 @@ rootProject.name = "taninim-comp"
 
 includeBuild("uplift")
 includeBuild("taninim")
+
+pluginManagement {
+    includeBuild("uplift/uplift-gradle-plugins")
+}
+
