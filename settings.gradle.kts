@@ -14,7 +14,7 @@ includeBuild("uplift")
 includeBuild("uplift/examples/hello-web")
 includeBuild("taninim")
 
-pluginManagement {
-    includeBuild("uplift/uplift-gradle-plugins")
-}
+//pluginManagement {
+//    includeBuild("uplift/uplift-gradle-plugins")
+//}
 
