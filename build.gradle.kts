@@ -1,3 +1,7 @@
+plugins {
+    java
+}
+
 tasks.register("uplift") {
     dependsOn(
         incl("taninim", ":ascension:uplift")
