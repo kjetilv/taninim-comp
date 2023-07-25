@@ -8,6 +8,12 @@ tasks.register("uplift") {
     )
 }
 
+tasks.register("ping") {
+    dependsOn(
+        incl("taninim", ":ascension:uplift-ping")
+    )
+}
+
 tasks.register("taninim") {
     dependsOn(
         incl("uplift", ":build"),
