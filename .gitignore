@@ -4,3 +4,12 @@ gradle.properties
 
 # Ignore Gradle build output directory
 build
+/.idea/ClojureProjectResolveSettings.xml
+/.idea/compiler.xml
+/.idea/gradle.xml
+/.idea/jarRepositories.xml
+/.idea/kotlinc.xml
+/.idea/misc.xml
+/.idea/sourcegraph.xml
+/.idea/vcs.xml
+/.idea/.gitignore
