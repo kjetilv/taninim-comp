@@ -2,8 +2,5 @@
 .gradle
 gradle.properties
 
-# IDEA
-.idea
-
 # Ignore Gradle build output directory
 build
