@@ -17,10 +17,4 @@ tasks.register("taninim") {
     )
 }
 
-tasks.register("hello-web") {
-    dependsOn(
-        incl("uplift/examples/hello-web", ":hello-web")
-    )
-}
-
 fun incl(composite: String, task: String): TaskReference = gradle.includedBuild(composite).task(task)
