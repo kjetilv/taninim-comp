@@ -17,4 +17,5 @@ tasks.register("taninim") {
     )
 }
 
-fun incl(composite: String, task: String): TaskReference = gradle.includedBuild(composite).task(task)
+fun incl(composite: String, task: String): TaskReference =
+    gradle.includedBuild(composite).task(task)
