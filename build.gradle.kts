@@ -13,7 +13,9 @@ tasks.register("ping") {
 tasks.register("taninim") {
     dependsOn(
         incl("uplift", ":build"),
-        incl("taninim", ":build")
+        incl("uplift", ":test"),
+        incl("taninim", ":build"),
+        incl("taninim", ":test")
     )
 }
 
