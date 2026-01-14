@@ -4,9 +4,3 @@
 [submodule "taninim"]
 	path = taninim
 	url = git@github.com:kjetilv/taninim.git
-[submodule "lopp"]
-	path = lopp
-	url = git@github.com:kjetilv/lopp.git
-[submodule "flopp"]
-	path = flopp
-	url = git@github.com:kjetilv/flopp.git
