@@ -1,0 +1,9 @@
+{
+  "taninim": {
+    "hostname": "localhost",
+    "key": "localhost-key.pem",
+    "cert": "localhost.pem",
+    "source": 8443,
+    "target": 8280
+  }
+}

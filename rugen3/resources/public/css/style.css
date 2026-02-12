@@ -1,0 +1,121 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+}
+
+.app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.auth h1 {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+}
+
+.auth-subtitle {
+    color: #999;
+    margin-bottom: 2rem;
+}
+
+.login-btn {
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    background: #1877f2;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.login-btn:hover {
+    background: #166fe5;
+}
+
+.library {
+    padding: 2rem;
+    flex: 1;
+}
+
+.album-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.album-card {
+    background: #16213e;
+    border-radius: 8px;
+    padding: 1.25rem;
+}
+
+.album-card.leased {
+    border-left: 3px solid #4ecca3;
+}
+
+.album-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.album-artist {
+    color: #999;
+    margin: 0.25rem 0;
+}
+
+.track-list {
+    margin-top: 0.75rem;
+}
+
+.track-item {
+    padding: 0.4rem 0;
+    cursor: pointer;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.track-item:hover {
+    color: #4ecca3;
+}
+
+.player-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #0f3460;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.controls button {
+    padding: 0.5rem 1rem;
+    margin-right: 0.5rem;
+    cursor: pointer;
+}
+
+.loading {
+    color: #999;
+    padding: 2rem;
+}
