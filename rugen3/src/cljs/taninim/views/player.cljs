@@ -17,7 +17,4 @@
         (case state
           :playing [:button {:on-click #(rf/dispatch [:player/pause])} "Pause"]
           :paused  [:button {:on-click #(rf/dispatch [:player/play track])} "Play"]
-          nil)]
-       [:audio {:src       (api/audio-url (:uuid track) (:format track) token)
-                :auto-play true
-                :controls  false}]])))
+          nil)]])))

@@ -7,7 +7,9 @@
 (rf/reg-event-fx
   :auth/login
   (fn [{:keys [db]} [_ ext-auth-response]]
-    {:db (assoc-in db [:auth :status] :authenticating)
+    {:db (-> db
+             (assoc-in [:auth :status] :authenticating)
+             (assoc-in [:auth :fb-user-id] (:userID ext-auth-response)))
      :fx [[:dispatch [:api/authenticate ext-auth-response]]]}))
 
 (rf/reg-event-db
@@ -82,25 +84,29 @@
 
 ;; --- Player ---
 
-(rf/reg-event-db
+(rf/reg-event-fx
   :player/play
-  (fn [db [_ track]]
-    (-> db
-        (assoc-in [:player :current-track] track)
-        (assoc-in [:player :state] :playing))))
+  (fn [{:keys [db]} [_ track]]
+    (let [token (get-in db [:auth :token])]
+      {:db (-> db
+               (assoc-in [:player :current-track] track)
+               (assoc-in [:player :state] :playing))
+       :audio/play {:track track :token token}})))
 
-(rf/reg-event-db
+(rf/reg-event-fx
   :player/pause
-  (fn [db _]
-    (assoc-in db [:player :state] :paused)))
+  (fn [{:keys [db]} _]
+    {:db (assoc-in db [:player :state] :paused)
+     :audio/pause true}))
 
-(rf/reg-event-db
+(rf/reg-event-fx
   :player/stop
-  (fn [db _]
-    (-> db
-        (assoc-in [:player :current-track] nil)
-        (assoc-in [:player :state] :stopped)
-        (assoc-in [:player :position] 0))))
+  (fn [{:keys [db]} _]
+    {:db (-> db
+             (assoc-in [:player :current-track] nil)
+             (assoc-in [:player :state] :stopped)
+             (assoc-in [:player :position] 0))
+     :audio/stop true}))
 
 (rf/reg-event-db
   :player/set-playlist

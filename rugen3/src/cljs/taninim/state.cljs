@@ -2,7 +2,7 @@
   (:require [re-frame.core :as rf]))
 
 (def default-db
-  {:auth    {:user-id nil :token nil :status :unauthenticated}
+  {:auth    {:user-id nil :fb-user-id nil :token nil :status :unauthenticated}
    :library {:albums [] :loading? false}
    :leases  {:active #{} :pending #{}}
    :player  {:current-track nil :playlist [] :position 0 :state :stopped}})

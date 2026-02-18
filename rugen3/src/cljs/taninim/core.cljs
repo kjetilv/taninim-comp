@@ -2,6 +2,7 @@
   (:require [reagent.dom.client :as rdc]
             [re-frame.core :as rf]
             [day8.re-frame.http-fx]
+            [taninim.audio]
             [taninim.events]
             [taninim.state]
             [taninim.fb :as fb]

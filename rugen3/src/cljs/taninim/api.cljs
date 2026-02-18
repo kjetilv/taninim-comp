@@ -41,10 +41,10 @@
 (rf/reg-event-fx
   :api/acquire-lease
   (fn [{:keys [db]} [_ album-id]]
-    (let [{:keys [user-id token]} (:auth db)]
+    (let [{:keys [fb-user-id token]} (:auth db)]
       {:http-xhrio {:method          :post
                     :uri             (str yellin-base "/lease")
-                    :params          {:userId user-id :token token :album album-id}
+                    :params          {:userId fb-user-id :token token :album album-id}
                     :format          (ajax/json-request-format)
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [:lease/acquired album-id]
@@ -53,10 +53,10 @@
 (rf/reg-event-fx
   :api/release-lease
   (fn [{:keys [db]} [_ album-id]]
-    (let [{:keys [user-id token]} (:auth db)]
+    (let [{:keys [fb-user-id token]} (:auth db)]
       {:http-xhrio {:method          :delete
                     :uri             (str yellin-base "/lease")
-                    :params          {:userId user-id :token token :album album-id}
+                    :params          {:userId fb-user-id :token token :album album-id}
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [:lease/released album-id]
                     :on-failure      [:lease/release-failed album-id]}})))
