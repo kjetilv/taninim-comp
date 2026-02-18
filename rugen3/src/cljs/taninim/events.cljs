@@ -87,6 +87,7 @@
 (rf/reg-event-fx
   :player/play
   (fn [{:keys [db]} [_ track]]
+    (js/console.log "player/play" (clj->js track))
     (let [token (get-in db [:auth :token])]
       {:db (-> db
                (assoc-in [:player :current-track] track)

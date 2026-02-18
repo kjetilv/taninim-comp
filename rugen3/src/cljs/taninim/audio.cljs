@@ -9,10 +9,11 @@
   (fn [{:keys [track token]}]
     (when-let [old @current-audio]
       (.pause old))
-    (let [url (api/audio-url (:uuid track) (:format track) token)
-          audio (js/Audio. url)]
-      (reset! current-audio audio)
-      (.play audio))))
+    (let [url (api/audio-url (:uuid track) (:format track) token)]
+      (js/console.log "audio/play" url)
+      (let [audio (js/Audio. url)]
+        (reset! current-audio audio)
+        (.play audio)))))
 
 (rf/reg-fx
   :audio/pause

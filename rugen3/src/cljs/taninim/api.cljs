@@ -62,4 +62,4 @@
                     :on-failure      [:lease/release-failed album-id]}})))
 
 (defn audio-url [track-uuid format token]
-  (str kudu-base "/audio/" track-uuid "." (name format) "?t=" token))
+  (str kudu-base "/audio/" track-uuid "." (if format (name format) "flac") "?t=" token))
