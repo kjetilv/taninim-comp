@@ -65,7 +65,8 @@
 (rf/reg-event-fx
   :lease/release
   (fn [{:keys [db]} [_ album-id]]
-    {:fx [[:dispatch [:api/release-lease album-id]]]}))
+    {:db (update-in db [:leases :active] disj album-id)
+     :fx [[:dispatch [:api/release-lease album-id]]]}))
 
 (rf/reg-event-db
   :lease/released

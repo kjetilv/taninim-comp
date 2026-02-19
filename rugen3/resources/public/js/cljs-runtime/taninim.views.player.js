@@ -7,9 +7,9 @@ var state = new cljs.core.Keyword(null,"state","state",-1988618099).cljs$core$IF
 if(cljs.core.truth_(track)){
 return new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"div.player-bar","div.player-bar",1208031723),new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"div.track-info","div.track-info",-1811326947),new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"span.track-title","span.track-title",844615584),new cljs.core.Keyword(null,"name","name",1843675177).cljs$core$IFn$_invoke$arity$1(track)], null),new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"span.track-artist","span.track-artist",-1626089750),new cljs.core.Keyword(null,"artist","artist",152869709).cljs$core$IFn$_invoke$arity$1(track)], null)], null),new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"div.controls","div.controls",1658515593),new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"button","button",1456579943),new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"on-click","on-click",1632826543),(function (){
 return re_frame.core.dispatch(new cljs.core.PersistentVector(null, 1, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword("player","stop","player/stop",1296737267)], null));
-})], null),"Stop"], null),(function (){var G__12557 = state;
-var G__12557__$1 = (((G__12557 instanceof cljs.core.Keyword))?G__12557.fqn:null);
-switch (G__12557__$1) {
+})], null),"Stop"], null),(function (){var G__12455 = state;
+var G__12455__$1 = (((G__12455 instanceof cljs.core.Keyword))?G__12455.fqn:null);
+switch (G__12455__$1) {
 case "playing":
 return new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"button","button",1456579943),new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"on-click","on-click",1632826543),(function (){
 return re_frame.core.dispatch(new cljs.core.PersistentVector(null, 1, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword("player","pause","player/pause",-1050709257)], null));

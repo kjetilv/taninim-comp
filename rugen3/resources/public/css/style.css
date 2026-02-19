@@ -93,6 +93,15 @@ body {
     gap: 0.75rem;
 }
 
+.track-title {
+    flex: 1;
+}
+
+.track-duration {
+    text-align: right;
+    color: #999;
+}
+
 .track-item:hover {
     color: #4ecca3;
 }

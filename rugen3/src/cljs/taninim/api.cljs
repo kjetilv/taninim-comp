@@ -57,6 +57,7 @@
       {:http-xhrio {:method          :delete
                     :uri             (str yellin-base "/lease")
                     :params          {:userId fb-user-id :token token :album album-id}
+                    :format          (ajax/json-request-format)
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [:lease/released album-id]
                     :on-failure      [:lease/release-failed album-id]}})))

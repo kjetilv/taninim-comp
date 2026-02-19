@@ -17,25 +17,25 @@ return (function (){
 var albums = cljs.core.deref(re_frame.core.subscribe.cljs$core$IFn$_invoke$arity$1(new cljs.core.PersistentVector(null, 1, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"albums","albums",-2017039447)], null)));
 var loading_QMARK_ = cljs.core.deref(re_frame.core.subscribe.cljs$core$IFn$_invoke$arity$1(new cljs.core.PersistentVector(null, 1, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"library-loading?","library-loading?",927194100)], null)));
 var active_leases = cljs.core.deref(re_frame.core.subscribe.cljs$core$IFn$_invoke$arity$1(new cljs.core.PersistentVector(null, 1, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"active-leases","active-leases",1444999241)], null)));
-return new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"div.library","div.library",1677056426),new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"h2","h2",-372662728),"Library"], null),(cljs.core.truth_(loading_QMARK_)?new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"div.loading","div.loading",-155515768),"Loading library..."], null):new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"div.album-grid","div.album-grid",1190495401),(function (){var iter__5480__auto__ = (function taninim$views$library$library_view_$_iter__12698(s__12699){
+return new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"div.library","div.library",1677056426),new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"h2","h2",-372662728),"Library"], null),(cljs.core.truth_(loading_QMARK_)?new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"div.loading","div.loading",-155515768),"Loading library..."], null):new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"div.album-grid","div.album-grid",1190495401),(function (){var iter__5480__auto__ = (function taninim$views$library$library_view_$_iter__12590(s__12591){
 return (new cljs.core.LazySeq(null,(function (){
-var s__12699__$1 = s__12699;
+var s__12591__$1 = s__12591;
 while(true){
-var temp__5804__auto__ = cljs.core.seq(s__12699__$1);
+var temp__5804__auto__ = cljs.core.seq(s__12591__$1);
 if(temp__5804__auto__){
-var s__12699__$2 = temp__5804__auto__;
-if(cljs.core.chunked_seq_QMARK_(s__12699__$2)){
-var c__5478__auto__ = cljs.core.chunk_first(s__12699__$2);
+var s__12591__$2 = temp__5804__auto__;
+if(cljs.core.chunked_seq_QMARK_(s__12591__$2)){
+var c__5478__auto__ = cljs.core.chunk_first(s__12591__$2);
 var size__5479__auto__ = cljs.core.count(c__5478__auto__);
-var b__12701 = cljs.core.chunk_buffer(size__5479__auto__);
-if((function (){var i__12700 = (0);
+var b__12593 = cljs.core.chunk_buffer(size__5479__auto__);
+if((function (){var i__12592 = (0);
 while(true){
-if((i__12700 < size__5479__auto__)){
-var album = cljs.core._nth(c__5478__auto__,i__12700);
-cljs.core.chunk_append(b__12701,cljs.core.with_meta(new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [taninim.views.library.album_card,album,active_leases], null),new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"key","key",-1516042587),new cljs.core.Keyword(null,"uuid","uuid",-2145095719).cljs$core$IFn$_invoke$arity$1(album)], null)));
+if((i__12592 < size__5479__auto__)){
+var album = cljs.core._nth(c__5478__auto__,i__12592);
+cljs.core.chunk_append(b__12593,cljs.core.with_meta(new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [taninim.views.library.album_card,album,active_leases], null),new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"key","key",-1516042587),new cljs.core.Keyword(null,"uuid","uuid",-2145095719).cljs$core$IFn$_invoke$arity$1(album)], null)));
 
-var G__12702 = (i__12700 + (1));
-i__12700 = G__12702;
+var G__12594 = (i__12592 + (1));
+i__12592 = G__12594;
 continue;
 } else {
 return true;
@@ -43,13 +43,13 @@ return true;
 break;
 }
 })()){
-return cljs.core.chunk_cons(cljs.core.chunk(b__12701),taninim$views$library$library_view_$_iter__12698(cljs.core.chunk_rest(s__12699__$2)));
+return cljs.core.chunk_cons(cljs.core.chunk(b__12593),taninim$views$library$library_view_$_iter__12590(cljs.core.chunk_rest(s__12591__$2)));
 } else {
-return cljs.core.chunk_cons(cljs.core.chunk(b__12701),null);
+return cljs.core.chunk_cons(cljs.core.chunk(b__12593),null);
 }
 } else {
-var album = cljs.core.first(s__12699__$2);
-return cljs.core.cons(cljs.core.with_meta(new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [taninim.views.library.album_card,album,active_leases], null),new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"key","key",-1516042587),new cljs.core.Keyword(null,"uuid","uuid",-2145095719).cljs$core$IFn$_invoke$arity$1(album)], null)),taninim$views$library$library_view_$_iter__12698(cljs.core.rest(s__12699__$2)));
+var album = cljs.core.first(s__12591__$2);
+return cljs.core.cons(cljs.core.with_meta(new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [taninim.views.library.album_card,album,active_leases], null),new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"key","key",-1516042587),new cljs.core.Keyword(null,"uuid","uuid",-2145095719).cljs$core$IFn$_invoke$arity$1(album)], null)),taninim$views$library$library_view_$_iter__12590(cljs.core.rest(s__12591__$2)));
 }
 } else {
 return null;
