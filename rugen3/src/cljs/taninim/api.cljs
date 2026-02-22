@@ -8,8 +8,10 @@
        (remove str/blank?)
        (mapv #(js->clj (.parse js/JSON %) :keywordize-keys true))))
 
-(def ^:private yellin-base "https://iaasxfw4me2vteua3jzmorfj7e0nchgf.lambda-url.eu-north-1.on.aws")
-(def ^:private kudu-base "https://irltdgn6vqkgol6rgrd4hprfp40yutvw.lambda-url.eu-north-1.on.aws")
+(def ^:private yellin-base "https://localhost:8082")
+;; (def ^:private yellin-base "https://iaasxfw4me2vteua3jzmorfj7e0nchgf.lambda-url.eu-north-1.on.aws")
+(def ^:private kudu-base "https://localhost:8081")
+;; (def ^:private kudu-base "https://irltdgn6vqkgol6rgrd4hprfp40yutvw.lambda-url.eu-north-1.on.aws")
 
 (rf/reg-event-fx
   :api/authenticate
