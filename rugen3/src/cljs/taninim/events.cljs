@@ -1,6 +1,7 @@
 (ns taninim.events
   (:require [re-frame.core :as rf]
-            [taninim.api :as api]))
+            [taninim.api :as api]
+            [taninim.state :as state]))
 
 ;; --- Auth ---
 
@@ -15,10 +16,14 @@
 (rf/reg-event-db
   :auth/success
   (fn [db [_ {:keys [user-id token]}]]
-    (-> db
-        (assoc-in [:auth :user-id] user-id)
-        (assoc-in [:auth :token] token)
-        (assoc-in [:auth :status] :authenticated))))
+    (let [fb-user-id (get-in db [:auth :fb-user-id])]
+      (state/persist-auth! {:user-id user-id
+                            :fb-user-id fb-user-id
+                            :token token})
+      (-> db
+          (assoc-in [:auth :user-id] user-id)
+          (assoc-in [:auth :token] token)
+          (assoc-in [:auth :status] :authenticated)))))
 
 (rf/reg-event-db
   :auth/failure

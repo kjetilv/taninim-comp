@@ -7,10 +7,33 @@
    :leases  {:active #{} :pending #{}}
    :player  {:current-track nil :playlist [] :position 0 :state :stopped}})
 
-(rf/reg-event-db
+(def ^:private auth-storage-key "taninim-auth")
+
+(defn persist-auth! [{:keys [user-id fb-user-id token]}]
+  (.setItem js/localStorage auth-storage-key
+            (.stringify js/JSON (clj->js {:user-id user-id
+                                          :fb-user-id fb-user-id
+                                          :token token}))))
+
+(defn clear-auth! []
+  (.removeItem js/localStorage auth-storage-key))
+
+(defn- restore-auth []
+  (when-let [raw (.getItem js/localStorage auth-storage-key)]
+    (let [parsed (js->clj (.parse js/JSON raw) :keywordize-keys true)]
+      (when (:token parsed)
+        parsed))))
+
+(rf/reg-event-fx
   :initialize-db
   (fn [_ _]
-    default-db))
+    (if-let [auth (restore-auth)]
+      {:db (-> default-db
+               (assoc :auth (merge (:auth default-db)
+                                   auth
+                                   {:status :authenticated})))
+       :fx [[:dispatch [:library/fetch]]]}
+      {:db default-db})))
 
 (rf/reg-sub :auth (fn [db _] (:auth db)))
 (rf/reg-sub :auth-status (fn [db _] (get-in db [:auth :status])))
