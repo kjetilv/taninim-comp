@@ -128,3 +128,31 @@ body {
     color: #999;
     padding: 2rem;
 }
+
+.error-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #b71c1c;
+    color: #fff;
+    padding: 0.75rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+}
+
+.error-message {
+    flex: 1;
+}
+
+.error-dismiss {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0 0.5rem;
+    line-height: 1;
+}

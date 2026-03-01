@@ -1,12 +1,12 @@
 goog.provide('taninim.state');
-taninim.state.default_db = new cljs.core.PersistentArrayMap(null, 4, [new cljs.core.Keyword(null,"auth","auth",1389754926),new cljs.core.PersistentArrayMap(null, 4, [new cljs.core.Keyword(null,"user-id","user-id",-206822291),null,new cljs.core.Keyword(null,"fb-user-id","fb-user-id",-1229679807),null,new cljs.core.Keyword(null,"token","token",-1211463215),null,new cljs.core.Keyword(null,"status","status",-1997798413),new cljs.core.Keyword(null,"unauthenticated","unauthenticated",-2029628705)], null),new cljs.core.Keyword(null,"library","library",467978288),new cljs.core.PersistentArrayMap(null, 2, [new cljs.core.Keyword(null,"albums","albums",-2017039447),cljs.core.PersistentVector.EMPTY,new cljs.core.Keyword(null,"loading?","loading?",1905707049),false], null),new cljs.core.Keyword(null,"leases","leases",1110965193),new cljs.core.PersistentArrayMap(null, 2, [new cljs.core.Keyword(null,"active","active",1895962068),cljs.core.PersistentHashSet.EMPTY,new cljs.core.Keyword(null,"pending","pending",-220036727),cljs.core.PersistentHashSet.EMPTY], null),new cljs.core.Keyword(null,"player","player",-97687400),new cljs.core.PersistentArrayMap(null, 4, [new cljs.core.Keyword(null,"current-track","current-track",483190593),null,new cljs.core.Keyword(null,"playlist","playlist",1952276871),cljs.core.PersistentVector.EMPTY,new cljs.core.Keyword(null,"position","position",-2011731912),(0),new cljs.core.Keyword(null,"state","state",-1988618099),new cljs.core.Keyword(null,"stopped","stopped",-1490414640)], null)], null);
+taninim.state.default_db = new cljs.core.PersistentArrayMap(null, 5, [new cljs.core.Keyword(null,"auth","auth",1389754926),new cljs.core.PersistentArrayMap(null, 4, [new cljs.core.Keyword(null,"user-id","user-id",-206822291),null,new cljs.core.Keyword(null,"fb-user-id","fb-user-id",-1229679807),null,new cljs.core.Keyword(null,"token","token",-1211463215),null,new cljs.core.Keyword(null,"status","status",-1997798413),new cljs.core.Keyword(null,"unauthenticated","unauthenticated",-2029628705)], null),new cljs.core.Keyword(null,"library","library",467978288),new cljs.core.PersistentArrayMap(null, 2, [new cljs.core.Keyword(null,"albums","albums",-2017039447),cljs.core.PersistentVector.EMPTY,new cljs.core.Keyword(null,"loading?","loading?",1905707049),false], null),new cljs.core.Keyword(null,"leases","leases",1110965193),new cljs.core.PersistentArrayMap(null, 2, [new cljs.core.Keyword(null,"active","active",1895962068),cljs.core.PersistentHashSet.EMPTY,new cljs.core.Keyword(null,"pending","pending",-220036727),cljs.core.PersistentHashSet.EMPTY], null),new cljs.core.Keyword(null,"player","player",-97687400),new cljs.core.PersistentArrayMap(null, 4, [new cljs.core.Keyword(null,"current-track","current-track",483190593),null,new cljs.core.Keyword(null,"playlist","playlist",1952276871),cljs.core.PersistentVector.EMPTY,new cljs.core.Keyword(null,"position","position",-2011731912),(0),new cljs.core.Keyword(null,"state","state",-1988618099),new cljs.core.Keyword(null,"stopped","stopped",-1490414640)], null),new cljs.core.Keyword(null,"error","error",-978969032),null], null);
 taninim.state.auth_storage_key = "taninim-auth";
-taninim.state.persist_auth_BANG_ = (function taninim$state$persist_auth_BANG_(p__12416){
-var map__12417 = p__12416;
-var map__12417__$1 = cljs.core.__destructure_map(map__12417);
-var user_id = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__12417__$1,new cljs.core.Keyword(null,"user-id","user-id",-206822291));
-var fb_user_id = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__12417__$1,new cljs.core.Keyword(null,"fb-user-id","fb-user-id",-1229679807));
-var token = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__12417__$1,new cljs.core.Keyword(null,"token","token",-1211463215));
+taninim.state.persist_auth_BANG_ = (function taninim$state$persist_auth_BANG_(p__12486){
+var map__12487 = p__12486;
+var map__12487__$1 = cljs.core.__destructure_map(map__12487);
+var user_id = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__12487__$1,new cljs.core.Keyword(null,"user-id","user-id",-206822291));
+var fb_user_id = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__12487__$1,new cljs.core.Keyword(null,"fb-user-id","fb-user-id",-1229679807));
+var token = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__12487__$1,new cljs.core.Keyword(null,"token","token",-1211463215));
 return localStorage.setItem(taninim.state.auth_storage_key,JSON.stringify(cljs.core.clj__GT_js(new cljs.core.PersistentArrayMap(null, 3, [new cljs.core.Keyword(null,"user-id","user-id",-206822291),user_id,new cljs.core.Keyword(null,"fb-user-id","fb-user-id",-1229679807),fb_user_id,new cljs.core.Keyword(null,"token","token",-1211463215),token], null))));
 });
 taninim.state.clear_auth_BANG_ = (function taninim$state$clear_auth_BANG_(){
@@ -67,6 +67,9 @@ return cljs.core.get_in.cljs$core$IFn$_invoke$arity$2(db,new cljs.core.Persisten
 })], 0));
 re_frame.core.reg_sub.cljs$core$IFn$_invoke$arity$variadic(new cljs.core.Keyword(null,"current-track","current-track",483190593),cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2([(function (db,_){
 return cljs.core.get_in.cljs$core$IFn$_invoke$arity$2(db,new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"player","player",-97687400),new cljs.core.Keyword(null,"current-track","current-track",483190593)], null));
+})], 0));
+re_frame.core.reg_sub.cljs$core$IFn$_invoke$arity$variadic(new cljs.core.Keyword(null,"error","error",-978969032),cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2([(function (db,_){
+return new cljs.core.Keyword(null,"error","error",-978969032).cljs$core$IFn$_invoke$arity$1(db);
 })], 0));
 
 //# sourceMappingURL=taninim.state.js.map

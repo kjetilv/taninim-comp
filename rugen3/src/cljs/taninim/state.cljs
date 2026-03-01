@@ -5,7 +5,8 @@
   {:auth    {:user-id nil :fb-user-id nil :token nil :status :unauthenticated}
    :library {:albums [] :loading? false}
    :leases  {:active #{} :pending #{}}
-   :player  {:current-track nil :playlist [] :position 0 :state :stopped}})
+   :player  {:current-track nil :playlist [] :position 0 :state :stopped}
+   :error   nil})
 
 (def ^:private auth-storage-key "taninim-auth")
 
@@ -49,3 +50,5 @@
 (rf/reg-sub :player (fn [db _] (:player db)))
 (rf/reg-sub :player-state (fn [db _] (get-in db [:player :state])))
 (rf/reg-sub :current-track (fn [db _] (get-in db [:player :current-track])))
+
+(rf/reg-sub :error (fn [db _] (:error db)))

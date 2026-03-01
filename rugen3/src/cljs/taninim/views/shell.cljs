@@ -4,6 +4,12 @@
             [taninim.views.library :as library]
             [taninim.views.player :as player]))
 
+(defn error-bar []
+  (when-let [error @(rf/subscribe [:error])]
+    [:div.error-bar
+     [:span.error-message error]
+     [:button.error-dismiss {:on-click #(rf/dispatch [:error/dismiss])} "\u00D7"]]))
+
 (defn app []
   (let [auth-status @(rf/subscribe [:auth-status])]
     [:div.app
@@ -12,4 +18,5 @@
        :authenticating  [:div.loading "Authenticating..."]
        :authenticated   [:div.main
                          [library/library-view]
-                         [player/player-bar]])]))
+                         [player/player-bar]])
+     [error-bar]]))

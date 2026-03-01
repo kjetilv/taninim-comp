@@ -3,6 +3,31 @@
             [taninim.api :as api]
             [taninim.state :as state]))
 
+;; --- Errors ---
+
+(defn- unauthorized? [error]
+  (= 401 (:status error)))
+
+(defn- error-message [error]
+  (let [status (:status error)
+        detail (or (get-in error [:response :message])
+                   (get-in error [:response :error])
+                   (:status-text error)
+                   "Unknown error")]
+    (if (and status (pos? status))
+      (str status " " detail)
+      detail)))
+
+(rf/reg-event-db
+  :error/show
+  (fn [db [_ message]]
+    (assoc db :error message)))
+
+(rf/reg-event-db
+  :error/dismiss
+  (fn [db _]
+    (assoc db :error nil)))
+
 ;; --- Auth ---
 
 (rf/reg-event-fx
@@ -25,10 +50,17 @@
           (assoc-in [:auth :token] token)
           (assoc-in [:auth :status] :authenticated)))))
 
-(rf/reg-event-db
+(rf/reg-event-fx
   :auth/failure
-  (fn [db [_ _error]]
-    (assoc-in db [:auth :status] :unauthenticated)))
+  (fn [{:keys [db]} [_ error]]
+    {:db (assoc-in db [:auth :status] :unauthenticated)
+     :fx [[:dispatch [:error/show (str "Authentication failed: " (error-message error))]]]}))
+
+(rf/reg-event-db
+  :auth/logout
+  (fn [_db _]
+    (state/clear-auth!)
+    state/default-db))
 
 ;; --- Library ---
 
@@ -45,12 +77,13 @@
         (assoc-in [:library :albums] albums)
         (assoc-in [:library :loading?] false))))
 
-(rf/reg-event-db
+(rf/reg-event-fx
   :library/fetch-failed
-  (fn [db [_ _error]]
-    (-> db
-        (assoc-in [:library :loading?] false)
-        (assoc-in [:library :error] true))))
+  (fn [{:keys [db]} [_ error]]
+    (if (unauthorized? error)
+      {:fx [[:dispatch [:auth/logout]]]}
+      {:db (assoc-in db [:library :loading?] false)
+       :fx [[:dispatch [:error/show (str "Failed to load library: " (error-message error))]]]})))
 
 ;; --- Leases ---
 
@@ -78,15 +111,21 @@
   (fn [db [_ album-id]]
     (update-in db [:leases :active] disj album-id)))
 
-(rf/reg-event-db
+(rf/reg-event-fx
   :lease/acquire-failed
-  (fn [db [_ album-id _error]]
-    (update-in db [:leases :pending] disj album-id)))
+  (fn [{:keys [db]} [_ album-id error]]
+    (if (unauthorized? error)
+      {:fx [[:dispatch [:auth/logout]]]}
+      {:db (update-in db [:leases :pending] disj album-id)
+       :fx [[:dispatch [:error/show (str "Failed to acquire lease: " (error-message error))]]]})))
 
-(rf/reg-event-db
+(rf/reg-event-fx
   :lease/release-failed
-  (fn [db [_ _album-id _error]]
-    db))
+  (fn [{:keys [db]} [_ _album-id error]]
+    (if (unauthorized? error)
+      {:fx [[:dispatch [:auth/logout]]]}
+      {:db db
+       :fx [[:dispatch [:error/show (str "Failed to release lease: " (error-message error))]]]})))
 
 ;; --- Player ---
 
