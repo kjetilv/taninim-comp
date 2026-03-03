@@ -7,7 +7,13 @@
         token @(rf/subscribe [:auth-token])
         track (:current-track player)
         state (:state player)]
-    (when track
+    (cond
+      (= state :lease-expired)
+      [:div.player-bar.player-error
+       [:span "The lease has expired or been revoked"]
+       [:button.error-dismiss {:on-click #(rf/dispatch [:player/stop])} "\u00D7"]]
+
+      track
       [:div.player-bar
        [:div.track-info
         [:span.track-title (:name track)]

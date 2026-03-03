@@ -55,6 +55,27 @@ body {
     flex: 1;
 }
 
+.library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logout-btn {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    background: transparent;
+    color: #999;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.logout-btn:hover {
+    color: #e0e0e0;
+    border-color: #888;
+}
+
 .album-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -122,6 +143,12 @@ body {
     padding: 0.5rem 1rem;
     margin-right: 0.5rem;
     cursor: pointer;
+}
+
+.player-error {
+    background: #b71c1c;
+    color: #fff;
+    justify-content: space-between;
 }
 
 .loading {

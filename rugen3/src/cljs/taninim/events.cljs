@@ -154,6 +154,14 @@
              (assoc-in [:player :position] 0))
      :audio/stop true}))
 
+(rf/reg-event-fx
+  :player/lease-expired
+  (fn [{:keys [db]} _]
+    {:db (-> db
+             (assoc-in [:player :current-track] nil)
+             (assoc-in [:player :state] :lease-expired))
+     :audio/stop true}))
+
 (rf/reg-event-db
   :player/set-playlist
   (fn [db [_ tracks]]

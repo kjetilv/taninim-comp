@@ -24,7 +24,9 @@
           loading? @(rf/subscribe [:library-loading?])
           active-leases @(rf/subscribe [:active-leases])]
       [:div.library
-       [:h2 "Library"]
+       [:div.library-header
+        [:h2 "Library"]
+        [:button.logout-btn {:on-click #(rf/dispatch [:auth/logout])} "Log out"]]
        (if loading?
          [:div.loading "Loading library..."]
          [:div.album-grid
