@@ -3,12 +3,12 @@ goog.provide('ajax.util');
  * Throws an error.
  */
 ajax.util.throw_error = (function ajax$util$throw_error(args){
-throw (new Error(cljs.core.str.cljs$core$IFn$_invoke$arity$1(args)));
+throw (new Error((""+cljs.core.str.cljs$core$IFn$_invoke$arity$1(args))));
 });
 ajax.util.get_content_type = (function ajax$util$get_content_type(response){
-var or__5002__auto__ = ajax.protocols._get_response_header(response,"Content-Type");
-if(cljs.core.truth_(or__5002__auto__)){
-return or__5002__auto__;
+var or__5162__auto__ = ajax.protocols._get_response_header(response,"Content-Type");
+if(cljs.core.truth_(or__5162__auto__)){
+return or__5162__auto__;
 } else {
 return "";
 }

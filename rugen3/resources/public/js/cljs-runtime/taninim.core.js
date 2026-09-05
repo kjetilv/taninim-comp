@@ -1,7 +1,7 @@
 goog.provide('taninim.core');
 if((typeof taninim !== 'undefined') && (typeof taninim.core !== 'undefined') && (typeof taninim.core.root !== 'undefined')){
 } else {
-taninim.core.root = reagent.dom.client.create_root(document.getElementById("app"));
+taninim.core.root = reagent.dom.client.create_root.cljs$core$IFn$_invoke$arity$1(document.getElementById("app"));
 }
 taninim.core.mount_root = (function taninim$core$mount_root(){
 re_frame.core.clear_subscription_cache_BANG_();

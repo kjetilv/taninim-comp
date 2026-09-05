@@ -41,7 +41,7 @@ shadow.js.jsRequire = function(name, opts) {
     if (moduleFn) {
       delete shadow$provide[name];
       try {
-        moduleFn.call(module, goog.global, shadow.js.jsRequire, module, module["exports"]);
+        moduleFn.call(module, shadow.js.jsRequire, module, module["exports"], goog.global);
       } catch (e) {
         console.warn("shadow-cljs - failed to load", name);
         console.error(e);
@@ -50,8 +50,7 @@ shadow.js.jsRequire = function(name, opts) {
       if (opts) {
         var globals = opts["globals"];
         if (globals) {
-          var i = 0;
-          for (; i < globals.length; i++) {
+          for (var i = 0; i < globals.length; i++) {
             window[globals[i]] = module["exports"];
           }
         }

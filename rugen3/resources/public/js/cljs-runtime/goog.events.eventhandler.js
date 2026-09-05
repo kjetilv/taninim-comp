@@ -29,8 +29,7 @@ goog.events.EventHandler.prototype.listen_ = function(src, type, opt_fn, opt_opt
     }
     type = goog.events.EventHandler.typeArray_;
   }
-  var i = 0;
-  for (; i < type.length; i++) {
+  for (var i = 0; i < type.length; i++) {
     var listenerObj = goog.events.listen(src, type[i], opt_fn || self.handleEvent, opt_options || false, opt_scope || self.handler_ || self);
     if (!listenerObj) {
       return self;
@@ -51,8 +50,7 @@ goog.events.EventHandler.prototype.listenOnceWithScope = function(src, type, fn,
 goog.events.EventHandler.prototype.listenOnce_ = function(src, type, opt_fn, opt_options, opt_scope) {
   var self = this;
   if (Array.isArray(type)) {
-    var i = 0;
-    for (; i < type.length; i++) {
+    for (var i = 0; i < type.length; i++) {
       self.listenOnce_(src, type[i], opt_fn, opt_options, opt_scope);
     }
   } else {
@@ -80,8 +78,7 @@ goog.events.EventHandler.prototype.listenWithWrapper_ = function(src, wrapper, l
 };
 goog.events.EventHandler.prototype.getListenerCount = function() {
   var count = 0;
-  var key;
-  for (key in this.keys_) {
+  for (var key in this.keys_) {
     if (Object.prototype.hasOwnProperty.call(this.keys_, key)) {
       count++;
     }
@@ -91,8 +88,7 @@ goog.events.EventHandler.prototype.getListenerCount = function() {
 goog.events.EventHandler.prototype.unlisten = function(src, type, opt_fn, opt_options, opt_scope) {
   var self = this;
   if (Array.isArray(type)) {
-    var i = 0;
-    for (; i < type.length; i++) {
+    for (var i = 0; i < type.length; i++) {
       self.unlisten(src, type[i], opt_fn, opt_options, opt_scope);
     }
   } else {

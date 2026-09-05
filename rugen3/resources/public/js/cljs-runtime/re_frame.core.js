@@ -12,8 +12,12 @@ goog.provide('re_frame.core');
  * 
  *   Usage:
  * 
- *    #!clj
+ *    
  *    (dispatch [:order "pizza" {:supreme 2 :meatlovers 1 :veg 1}])
+ * 
+ *   See also: `dispatch-with` for per-dispatch fx substitution,
+ *   `dispatch-and-settle` for awaiting a dispatch cascade, and
+ *   `re-frame.core-instrumented/dispatch` for DEBUG call-site source metadata.
  *   
  */
 re_frame.core.dispatch = (function re_frame$core$dispatch(event){
@@ -40,12 +44,144 @@ return re_frame.router.dispatch(event);
  * 
  *   Usage:
  * 
- *    #!clj
+ *    
  *    (dispatch-sync [:sing :falsetto "piano accordion"])
+ * 
+ *   See also: `dispatch-sync-with` for synchronous fx substitution,
+ *   and `re-frame.core-instrumented/dispatch-sync` for DEBUG call-site source
+ *   metadata.
  *   
  */
 re_frame.core.dispatch_sync = (function re_frame$core$dispatch_sync(event){
 return re_frame.router.dispatch_sync(event);
+});
+/**
+ * Dispatch `event` with selected fx handlers temporarily
+ * substituted for the duration of the dispatch (and any
+ * `:fx [:dispatch ...]` cascade).
+ * 
+ * `overrides` is a `{fx-id stub-fn}` map. For each fx-id present,
+ * `stub-fn` is invoked instead of the registered handler when an
+ * effect of that id fires. Stub fns must mirror the contract of
+ * the original — same return shape, same callback / promise
+ * lifecycle.
+ * 
+ * Use cases:
+ * - Dry-run dispatches in dev: fire an event, observe its
+ *   `:effects` and the `app-db` change, but stub `:http-xhrio`
+ *   / navigation / local-storage so probing is safe.
+ * - Test scenarios that don't want to install global stubs.
+ * - REPL exploration with reversible side-effects.
+ * 
+ * Cascade: overrides apply to ALL events fired in the cascade —
+ * children queued via `:fx [:dispatch ...]` inherit the
+ * substitution map (via event metadata; see
+ * `re-frame.fx` for the propagation mechanism).
+ * 
+ * Restore: no try/finally needed. The override is carried as
+ * event metadata, not via a global state mutation; it expires
+ * when the event finishes processing. Two overlapping
+ * `dispatch-with` calls each carry their own meta and don't
+ * interfere.
+ * 
+ * Returns nil (matches `dispatch`).
+ * 
+ *     (dispatch-with [:user/login {:email "..." :password "..."}]
+ *                    {:http-xhrio (fn [req]
+ *                                   ;; mimic xhrio's on-success contract:
+ *                                   (re-frame.core/dispatch
+ *                                     (conj (:on-success req) {:stubbed true})))})
+ *   
+ */
+re_frame.core.dispatch_with = (function re_frame$core$dispatch_with(event,overrides){
+return re_frame.router.dispatch(cljs.core.vary_meta.cljs$core$IFn$_invoke$arity$4(event,cljs.core.assoc,new cljs.core.Keyword("re-frame","fx-overrides","re-frame/fx-overrides",1984520294),overrides));
+});
+/**
+ * Like `dispatch-with`, but processes the event synchronously
+ * (matching the difference between `dispatch` and
+ * `dispatch-sync`). Overrides apply to the event and any
+ * `:fx [:dispatch ...]` cascade it starts.
+ * 
+ *     (dispatch-sync-with [:user/login {:email "..."}]
+ *                         {:http-xhrio (fn [req] ...)})
+ * 
+ * See `dispatch-with` for the full override semantics.
+ */
+re_frame.core.dispatch_sync_with = (function re_frame$core$dispatch_sync_with(event,overrides){
+return re_frame.router.dispatch_sync(cljs.core.vary_meta.cljs$core$IFn$_invoke$arity$4(event,cljs.core.assoc,new cljs.core.Keyword("re-frame","fx-overrides","re-frame/fx-overrides",1984520294),overrides));
+});
+/**
+ * Dispatch `event` and return a deferred value that resolves once
+ * the event AND its synchronous cascade of `:fx [:dispatch ...]`
+ * children settle.
+ * 
+ * Resolves to:
+ *   {:ok? true :root-epoch <epoch> :cascaded-epochs [<epoch> ...]}
+ *   {:ok? false :reason :timeout :event ev :captured-epochs [...]}
+ * 
+ * CLJS returns a JS Promise; CLJ returns a `clojure.core/promise`.
+ * In both cases the resolved value is a Clojure map — CLJS callers
+ * should NOT `js->clj` it.
+ * 
+ * `opts` (all optional):
+ *   :timeout-ms        int  ; default 5000 — overall budget
+ *   :settle-window-ms  int  ; default 100  — quiet period before
+ *                           ;                declaring the cascade
+ *                           ;                settled
+ *   :include-cascaded? bool ; default true — include child epochs
+ *                           ;                fired via :fx [:dispatch ...]
+ *   :overrides         map  ; fx-id -> stub-fn, as in dispatch-with;
+ *                           ; inherited by the synchronous cascade
+ * 
+ * USAGE
+ * 
+ *   ;; CLJS — await the promise
+ *   (-> (dispatch-and-settle [:cart/checkout])
+ *       (.then (fn [result] (...))))
+ * 
+ *   ;; CLJ — deref the promise (blocks until resolved)
+ *   (deref (dispatch-and-settle [:cart/checkout]))
+ * 
+ *   ;; Override selected fx handlers while awaiting the cascade
+ *   (deref (dispatch-and-settle [:cart/checkout]
+ *                                {:overrides {:http-xhrio stub-success}}))
+ * 
+ * IMPLEMENTATION
+ * 
+ * See `re-frame.router/dispatch-and-settle` for the long comment
+ * covering the four design questions resolved (settle definition,
+ * cascade depth, promise vs channel, leverage of register-epoch-cb)
+ * and the v1 limitations around async effects.
+ */
+re_frame.core.dispatch_and_settle = (function re_frame$core$dispatch_and_settle(var_args){
+var G__23782 = arguments.length;
+switch (G__23782) {
+case 1:
+return re_frame.core.dispatch_and_settle.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
+
+break;
+case 2:
+return re_frame.core.dispatch_and_settle.cljs$core$IFn$_invoke$arity$2((arguments[(0)]),(arguments[(1)]));
+
+break;
+default:
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
+
+}
+});
+
+(re_frame.core.dispatch_and_settle.cljs$core$IFn$_invoke$arity$1 = (function (event){
+return re_frame.router.dispatch_and_settle.cljs$core$IFn$_invoke$arity$1(event);
+}));
+
+(re_frame.core.dispatch_and_settle.cljs$core$IFn$_invoke$arity$2 = (function (event,opts){
+return re_frame.router.dispatch_and_settle.cljs$core$IFn$_invoke$arity$2(event,opts);
+}));
+
+(re_frame.core.dispatch_and_settle.cljs$lang$maxFixedArity = 2);
+
+re_frame.core._reg_event = (function re_frame$core$_reg_event(id,interceptors,handler__GT_interceptor,handler){
+return re_frame.events.register(id,new cljs.core.PersistentVector(null, 6, 5, cljs.core.PersistentVector.EMPTY_NODE, [re_frame.cofx.inject_db,re_frame.fx.do_fx,re_frame.flow.alpha.interceptor,re_frame.std_interceptors.inject_global_interceptors,interceptors,(handler__GT_interceptor.cljs$core$IFn$_invoke$arity$1 ? handler__GT_interceptor.cljs$core$IFn$_invoke$arity$1(handler) : handler__GT_interceptor.call(null,handler))], null));
 });
 /**
  * Register the given event `handler` (function) for the given `id`. Optionally, provide
@@ -55,9 +191,10 @@ return re_frame.router.dispatch_sync(event);
  *  - `handler` is a function: (db event) -> db
  *  - `interceptors` is a collection of interceptors. Will be flattened and nils removed.
  * 
+ * 
  *   Example Usage:
  * 
- *    #!clj
+ * 
  *    (reg-event-db
  *      :token
  *      (fn [db event]
@@ -65,7 +202,7 @@ return re_frame.router.dispatch_sync(event);
  * 
  *   Or perhaps:
  * 
- *    #!clj
+ * 
  *    (reg-event-db
  *      :namespaced/id           ;; <-- namespaced keywords are often used
  *      [one two three]          ;; <-- a seq of interceptors
@@ -73,11 +210,14 @@ return re_frame.router.dispatch_sync(event);
  *        (-> db
  *          (dissoc arg1)
  *          (update :key + arg2))))   ;; return updated db
+ * 
+ *   See also: `re-frame.core-instrumented/reg-event-db` for DEBUG call-site source
+ *   metadata on registered handlers.
  *   
  */
 re_frame.core.reg_event_db = (function re_frame$core$reg_event_db(var_args){
-var G__13169 = arguments.length;
-switch (G__13169) {
+var G__23784 = arguments.length;
+switch (G__23784) {
 case 2:
 return re_frame.core.reg_event_db.cljs$core$IFn$_invoke$arity$2((arguments[(0)]),(arguments[(1)]));
 
@@ -87,7 +227,7 @@ return re_frame.core.reg_event_db.cljs$core$IFn$_invoke$arity$3((arguments[(0)])
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -97,7 +237,7 @@ return re_frame.core.reg_event_db.cljs$core$IFn$_invoke$arity$3(id,null,handler)
 }));
 
 (re_frame.core.reg_event_db.cljs$core$IFn$_invoke$arity$3 = (function (id,interceptors,handler){
-return re_frame.events.register(id,new cljs.core.PersistentVector(null, 5, 5, cljs.core.PersistentVector.EMPTY_NODE, [re_frame.cofx.inject_db,re_frame.fx.do_fx,re_frame.std_interceptors.inject_global_interceptors,interceptors,re_frame.std_interceptors.db_handler__GT_interceptor(handler)], null));
+return re_frame.core._reg_event(id,interceptors,re_frame.std_interceptors.db_handler__GT_interceptor,handler);
 }));
 
 (re_frame.core.reg_event_db.cljs$lang$maxFixedArity = 3);
@@ -113,7 +253,7 @@ return re_frame.events.register(id,new cljs.core.PersistentVector(null, 5, 5, cl
  * 
  *   Example Usage:
  * 
- *    #!clj
+ * 
  *    (reg-event-fx
  *      :event-id
  *      (fn [cofx event]
@@ -122,18 +262,21 @@ return re_frame.events.register(id,new cljs.core.PersistentVector(null, 5, 5, cl
  * 
  *   Or perhaps:
  * 
- *    #!clj
+ * 
  *    (reg-event-fx
  *      :namespaced/id           ;; <-- namespaced keywords are often used
  *      [one two three]          ;; <-- a seq of interceptors
  *      (fn [{:keys [db] :as cofx} [_ arg1 arg2]] ;; destructure both arguments
  *        {:db (assoc db :some-key arg1)          ;; return a map of effects
  *         :fx [[:dispatch [:some-event arg2]]]}))
+ * 
+ *   See also: `re-frame.core-instrumented/reg-event-fx` for DEBUG call-site source
+ *   metadata on registered handlers.
  *   
  */
 re_frame.core.reg_event_fx = (function re_frame$core$reg_event_fx(var_args){
-var G__13171 = arguments.length;
-switch (G__13171) {
+var G__23786 = arguments.length;
+switch (G__23786) {
 case 2:
 return re_frame.core.reg_event_fx.cljs$core$IFn$_invoke$arity$2((arguments[(0)]),(arguments[(1)]));
 
@@ -143,7 +286,7 @@ return re_frame.core.reg_event_fx.cljs$core$IFn$_invoke$arity$3((arguments[(0)])
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -153,7 +296,7 @@ return re_frame.core.reg_event_fx.cljs$core$IFn$_invoke$arity$3(id,null,handler)
 }));
 
 (re_frame.core.reg_event_fx.cljs$core$IFn$_invoke$arity$3 = (function (id,interceptors,handler){
-return re_frame.events.register(id,new cljs.core.PersistentVector(null, 5, 5, cljs.core.PersistentVector.EMPTY_NODE, [re_frame.cofx.inject_db,re_frame.fx.do_fx,re_frame.std_interceptors.inject_global_interceptors,interceptors,re_frame.std_interceptors.fx_handler__GT_interceptor(handler)], null));
+return re_frame.core._reg_event(id,interceptors,re_frame.std_interceptors.fx_handler__GT_interceptor,handler);
 }));
 
 (re_frame.core.reg_event_fx.cljs$lang$maxFixedArity = 3);
@@ -169,7 +312,7 @@ return re_frame.events.register(id,new cljs.core.PersistentVector(null, 5, 5, cl
  * 
  *   Example Usage:
  * 
- *    #!clj
+ * 
  *    (reg-event-ctx
  *      :event-id
  *      (fn [{:keys [coeffects] :as context}]
@@ -182,11 +325,14 @@ return re_frame.events.register(id,new cljs.core.PersistentVector(null, 5, 5, cl
  *                           function3)
  *              effects  (select-keys result [:db :fx])]
  *           (assoc context :effects effects))))
+ * 
+ *   See also: `re-frame.core-instrumented/reg-event-ctx` for DEBUG call-site source
+ *   metadata on registered handlers.
  *   
  */
 re_frame.core.reg_event_ctx = (function re_frame$core$reg_event_ctx(var_args){
-var G__13173 = arguments.length;
-switch (G__13173) {
+var G__23788 = arguments.length;
+switch (G__23788) {
 case 2:
 return re_frame.core.reg_event_ctx.cljs$core$IFn$_invoke$arity$2((arguments[(0)]),(arguments[(1)]));
 
@@ -196,7 +342,7 @@ return re_frame.core.reg_event_ctx.cljs$core$IFn$_invoke$arity$3((arguments[(0)]
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -206,7 +352,7 @@ return re_frame.core.reg_event_ctx.cljs$core$IFn$_invoke$arity$3(id,null,handler
 }));
 
 (re_frame.core.reg_event_ctx.cljs$core$IFn$_invoke$arity$3 = (function (id,interceptors,handler){
-return re_frame.events.register(id,new cljs.core.PersistentVector(null, 5, 5, cljs.core.PersistentVector.EMPTY_NODE, [re_frame.cofx.inject_db,re_frame.fx.do_fx,re_frame.std_interceptors.inject_global_interceptors,interceptors,re_frame.std_interceptors.ctx_handler__GT_interceptor(handler)], null));
+return re_frame.core._reg_event(id,interceptors,re_frame.std_interceptors.ctx_handler__GT_interceptor,handler);
 }));
 
 (re_frame.core.reg_event_ctx.cljs$lang$maxFixedArity = 3);
@@ -221,8 +367,8 @@ return re_frame.events.register(id,new cljs.core.PersistentVector(null, 5, 5, cl
  *   console if it finds no matching registration.
  */
 re_frame.core.clear_event = (function re_frame$core$clear_event(var_args){
-var G__13175 = arguments.length;
-switch (G__13175) {
+var G__23792 = arguments.length;
+switch (G__23792) {
 case 0:
 return re_frame.core.clear_event.cljs$core$IFn$_invoke$arity$0();
 
@@ -232,7 +378,7 @@ return re_frame.core.clear_event.cljs$core$IFn$_invoke$arity$1((arguments[(0)]))
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -284,7 +430,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  *   1. A function that will accept two parameters, the `input-values` and `query-vector`. This is the
  *   standard way to provide a `computation-function`
  * 
- *        #!clj
+ * 
  *        (reg-sub
  *          :query-id
  *          (fn [input-values query-vector]
@@ -292,7 +438,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  * 
  *   2. A single sugary tuple of `:->` and a 1-arity `computation-function`:
  * 
- *        #!clj
+ * 
  *        (reg-sub
  *          :query-id
  *          :-> computation-fn)
@@ -306,7 +452,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  *    from the `input-values`. As shown below, this subscription will simply retrieve
  *    the value associated with the `:foo` key in our db:
  * 
- *        #!clj
+ * 
  *        (reg-sub
  *          :query-id
  *          (fn [db _]    ;; :<---- trivial boilerplate we might want to skip over
@@ -315,7 +461,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  *    This is slightly more boilerplate than we might like to do,
  *    as we can use a keyword directly as a function, and we might like to do this:
  * 
- *        #!clj
+ * 
  *        (reg-sub
  *          :query-id
  *          :foo)  ;; :<---- This could be dangerous. If `:foo` is not in db, we get the `query-vector` instead of `nil`.
@@ -323,7 +469,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  *    By using `:->` our function would not contain the `query-vector`, and any
  *    missing keys would be represented as such:
  * 
- *        #!clj
+ * 
  *        (reg-sub
  *          :query-id
  *          :-> :foo)
@@ -334,7 +480,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  * 
  *   3. A single sugary tuple of `:=>` and a multi-arity `computation-function`
  * 
- *        #!clj
+ * 
  *        (reg-sub
  *          :query-id
  *          :=> computation-fn)
@@ -344,7 +490,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  *    To use them in variation #1, we need to destructure our `computation-function` parameters
  *    in order to use them.
  * 
- *        #!clj
+ * 
  *        (reg-sub
  *          :query-id
  *          (fn [db [_ foo]]
@@ -355,7 +501,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  *    instead, so we might be able to use a multi-arity function directly as our `computation-function`.
  *    A rewrite of the above sub using this sugary syntax would look like this:
  * 
- *        #!clj
+ * 
  *        (reg-sub
  *          :query-id
  *          :=> vector)  ;; :<---- Could also be `(fn [db foo] [db foo])`
@@ -383,7 +529,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  * 
  *   **First variation** - no input signal function given:
  * 
- *    #!clj
+ * 
  *    (reg-sub
  *      :query-id
  *      a-computation-fn)   ;; has signature:  (fn [db query-vec]  ... ret-value)
@@ -395,7 +541,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  * 
  *   **Second variation** - a signal function is explicitly supplied:
  * 
- *    #!clj
+ * 
  *    (reg-sub
  *      :query-id
  *      signal-fn     ;; <-- here
@@ -414,7 +560,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  * 
  *   This example `signal function` returns a 2-vector of input signals.
  * 
- *    #!clj
+ * 
  *    (fn [query-vec dynamic-vec]
  *       [(subscribe [:a-sub])
  *        (subscribe [:b-sub])])
@@ -422,26 +568,26 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  *   The associated computation function must be written
  *   to expect a 2-vector of values for its first argument:
  * 
- *    #!clj
+ * 
  *    (fn [[a b] query-vec]     ;; 1st argument is a seq of two values
  *      ....)
  * 
  *   If, on the other hand, the signal function was simpler and returned a singleton, like this:
  * 
- *    #!clj
+ * 
  *    (fn [query-vec dynamic-vec]
  *      (subscribe [:a-sub]))      ;; <-- returning a singleton
  * 
  *   then the associated computation function must be written to expect a single value
  *   as the 1st argument:
  * 
- *    #!clj
+ * 
  *    (fn [a query-vec]       ;; 1st argument is a single value
  *       ...)
  * 
  *   Further Note: variation #1 above, in which an `signal-fn` was not supplied, like this:
  * 
- *    #!clj
+ * 
  *    (reg-sub
  *      :query-id
  *      a-computation-fn)   ;; has signature:  (fn [db query-vec]  ... ret-value)
@@ -449,7 +595,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  *   is the equivalent of using this
  *   2nd variation and explicitly supplying a `signal-fn` which returns `app-db`:
  * 
- *    #!clj
+ * 
  *    (reg-sub
  *      :query-id
  *      (fn [_ _]  re-frame/app-db)   ;; <--- explicit signal-fn
@@ -457,7 +603,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  * 
  *   **Third variation** - syntax Sugar
  * 
- *    #!clj
+ * 
  *    (reg-sub
  *      :a-b-sub
  *      :<- [:a-sub]
@@ -471,7 +617,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  *   If you supply only one pair a singleton will be supplied to the computation function,
  *   as if you had supplied a `signal-fn` returning only a single value:
  * 
- *    #!clj
+ * 
  *    (reg-sub
  *      :a-sub
  *      :<- [:a-sub]
@@ -482,37 +628,39 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  *   and the direction of arrows shows the flow of data and functions. The example from
  *   directly above is reproduced here:
  * 
- *    #!clj
+ * 
  *    (reg-sub
  *      :a-b-sub
  *      :<- [:a-sub]
  *      :<- [:b-sub]
  *      :-> (partial zipmap [:a :b]))
  * 
+ * 
  *   For further understanding, read the tutorials, and look at the detailed comments in
  *   /examples/todomvc/src/subs.cljs.
  * 
- *   See also: `subscribe`
+ *   See also: `subscribe`, and `re-frame.core-instrumented/reg-sub` for DEBUG
+ *   call-site source metadata on registered subscription handlers.
  *   
  */
 re_frame.core.reg_sub = (function re_frame$core$reg_sub(var_args){
-var args__5732__auto__ = [];
-var len__5726__auto___13215 = arguments.length;
-var i__5727__auto___13216 = (0);
+var args__5903__auto__ = [];
+var len__5897__auto___23878 = arguments.length;
+var i__5898__auto___23879 = (0);
 while(true){
-if((i__5727__auto___13216 < len__5726__auto___13215)){
-args__5732__auto__.push((arguments[i__5727__auto___13216]));
+if((i__5898__auto___23879 < len__5897__auto___23878)){
+args__5903__auto__.push((arguments[i__5898__auto___23879]));
 
-var G__13217 = (i__5727__auto___13216 + (1));
-i__5727__auto___13216 = G__13217;
+var G__23880 = (i__5898__auto___23879 + (1));
+i__5898__auto___23879 = G__23880;
 continue;
 } else {
 }
 break;
 }
 
-var argseq__5733__auto__ = ((((1) < args__5732__auto__.length))?(new cljs.core.IndexedSeq(args__5732__auto__.slice((1)),(0),null)):null);
-return re_frame.core.reg_sub.cljs$core$IFn$_invoke$arity$variadic((arguments[(0)]),argseq__5733__auto__);
+var argseq__5904__auto__ = ((((1) < args__5903__auto__.length))?(new cljs.core.IndexedSeq(args__5903__auto__.slice((1)),(0),null)):null);
+return re_frame.core.reg_sub.cljs$core$IFn$_invoke$arity$variadic((arguments[(0)]),argseq__5904__auto__);
 });
 
 (re_frame.core.reg_sub.cljs$core$IFn$_invoke$arity$variadic = (function (query_id,args){
@@ -522,11 +670,11 @@ return cljs.core.apply.cljs$core$IFn$_invoke$arity$3(re_frame.subs.reg_sub,query
 (re_frame.core.reg_sub.cljs$lang$maxFixedArity = (1));
 
 /** @this {Function} */
-(re_frame.core.reg_sub.cljs$lang$applyTo = (function (seq13176){
-var G__13177 = cljs.core.first(seq13176);
-var seq13176__$1 = cljs.core.next(seq13176);
-var self__5711__auto__ = this;
-return self__5711__auto__.cljs$core$IFn$_invoke$arity$variadic(G__13177,seq13176__$1);
+(re_frame.core.reg_sub.cljs$lang$applyTo = (function (seq23796){
+var G__23797 = cljs.core.first(seq23796);
+var seq23796__$1 = cljs.core.next(seq23796);
+var self__5882__auto__ = this;
+return self__5882__auto__.cljs$core$IFn$_invoke$arity$variadic(G__23797,seq23796__$1);
 }));
 
 /**
@@ -536,14 +684,14 @@ return self__5711__auto__.cljs$core$IFn$_invoke$arity$variadic(G__13177,seq13176
  * 
  *   To obtain the current value from the Signal, it must be dereferenced:
  * 
- *    #!clj
+ *    
  *    (let [signal (subscribe [:items])
  *          value  (deref signal)]     ;; could be written as @signal
  *      ...)
  * 
  * which is typically written tersely as simple:
  * 
- *    #!clj
+ *    
  *    (let [items  @(subscribe [:items])]
  *      ...)
  * 
@@ -556,13 +704,13 @@ return self__5711__auto__.cljs$core$IFn$_invoke$arity$variadic(G__13177,seq13176
  *   `dynv` exists for historical reasons and is borderline deprecated these days.
  *   It is a vector of signals. Re-frame will dereference each of them and pass a
  *   vector of their values to your subscription handler as a third argument.
- *   If there's logic determing __what__ query to subscribe __to__, consider
+ *   If there's logic determining __what__ query to subscribe __to__, consider
  *   expressing it in a `signal function`, or use `reg-sub-raw`. Failing that, `dynv`
  *   allows you to colocate this logic with the `subscribe` call.
  * 
  *   **Example Usage**:
  * 
- *    #!clj
+ *    
  *    (subscribe [:items])
  *    (subscribe [:items "blue" :small])
  *    (subscribe [:items {:colour "blue"  :size :small}])
@@ -576,7 +724,7 @@ return self__5711__auto__.cljs$core$IFn$_invoke$arity$variadic(G__13177,seq13176
  *   When used in a view function BE SURE to `deref` the returned value.
  *   In fact, to avoid any mistakes, some prefer to define:
  * 
- *    #!clj
+ *    
  *    (def <sub  (comp deref re-frame.core/subscribe))
  * 
  *   And then, within their views, they call  `(<sub [:items :small])` rather
@@ -587,12 +735,14 @@ return self__5711__auto__.cljs$core$IFn$_invoke$arity$variadic(G__13177,seq13176
  *   Two, or more, concurrent subscriptions for the same query will
  *   source reactive updates from the one executing handler.
  * 
- *   See also: `reg-sub`
+ *   See also: `reg-sub`, `re-frame.core-instrumented/subscribe` for DEBUG
+ *   call-site source metadata, and `query-v-for-reaction` for recovering
+ *   the query vector from a held reaction.
  *   
  */
 re_frame.core.subscribe = (function re_frame$core$subscribe(var_args){
-var G__13179 = arguments.length;
-switch (G__13179) {
+var G__23800 = arguments.length;
+switch (G__23800) {
 case 1:
 return re_frame.core.subscribe.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
@@ -602,7 +752,7 @@ return re_frame.core.subscribe.cljs$core$IFn$_invoke$arity$2((arguments[(0)]),(a
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -629,8 +779,8 @@ return re_frame.subs.subscribe.cljs$core$IFn$_invoke$arity$2(query,dynv);
  *   NOTE: Depending on the usecase, it may be necessary to call `clear-subscription-cache!` afterwards
  */
 re_frame.core.clear_sub = (function re_frame$core$clear_sub(var_args){
-var G__13181 = arguments.length;
-switch (G__13181) {
+var G__23802 = arguments.length;
+switch (G__23802) {
 case 0:
 return re_frame.core.clear_sub.cljs$core$IFn$_invoke$arity$0();
 
@@ -640,7 +790,7 @@ return re_frame.core.clear_sub.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -666,6 +816,31 @@ re_frame.core.reg_sub_raw = (function re_frame$core$reg_sub_raw(query_id,handler
 return re_frame.registrar.register_handler(re_frame.subs.kind,query_id,handler_fn);
 });
 /**
+ * Returns the query-v that produced `reaction`, or nil if the reaction
+ * is unknown to re-frame's subscription cache.
+ * 
+ * The inverse of `subscribe`: given a reaction held by tooling or a
+ * diagnostic recipe, recover the query-v that originally produced it.
+ * Backed by an object-identity-keyed reverse map maintained alongside
+ * the subscription cache; entries are cleared when the reaction is
+ * disposed.
+ */
+re_frame.core.query_v_for_reaction = (function re_frame$core$query_v_for_reaction(reaction){
+return re_frame.subs.query_v_for_reaction(reaction);
+});
+/**
+ * Returns a sequence of all currently-live query-vectors — one entry
+ * per active cached subscription.
+ * 
+ * A snapshot of the subscription cache at call time; does not update
+ * reactively. Useful for devtools and diagnostic tools that need to
+ * enumerate active subscriptions without relying on internal cache
+ * structure details.
+ */
+re_frame.core.live_query_vs = (function re_frame$core$live_query_vs(){
+return re_frame.subs.live_query_vs();
+});
+/**
  * Removes all subscriptions from the cache.
  * 
  *   This function can be used at development time or test time. Useful when hot reloading
@@ -685,9 +860,10 @@ return re_frame.subs.clear_subscription_cache_BANG_();
  *  - `handler` is a side-effecting function which takes a single argument and whose return
  *    value is ignored.
  * 
+ * 
  *   To use, first, associate `:effect2` with a handler:
  * 
- *    #!clj
+ * 
  *    (reg-fx
  *       :effect2
  *       (fn [value]
@@ -695,11 +871,14 @@ return re_frame.subs.clear_subscription_cache_BANG_();
  * 
  *   Then, later, if an event handler were to return this effects map:
  * 
- *    #!clj
+ * 
  *    {:effect2  [1 2]}
  * 
  *   then the `handler` `fn` we registered previously, using `reg-fx`, will be
  *   called with an argument of `[1 2]`.
+ * 
+ *   See also: `re-frame.core-instrumented/reg-fx` for DEBUG call-site source
+ *   metadata on registered effect handlers.
  *   
  */
 re_frame.core.reg_fx = (function re_frame$core$reg_fx(id,handler){
@@ -716,8 +895,8 @@ return re_frame.fx.reg_fx(id,handler);
  *   
  */
 re_frame.core.clear_fx = (function re_frame$core$clear_fx(var_args){
-var G__13183 = arguments.length;
-switch (G__13183) {
+var G__23804 = arguments.length;
+switch (G__23804) {
 case 0:
 return re_frame.core.clear_fx.cljs$core$IFn$_invoke$arity$0();
 
@@ -727,7 +906,7 @@ return re_frame.core.clear_fx.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -777,7 +956,7 @@ return re_frame.cofx.reg_cofx(id,handler);
  * 
  *   First - Early in app startup, you register a `coeffect handler` for `:datetime`:
  * 
- *    #!clj
+ *    
  *    (re-frame.core/reg-cofx
  *      :datetime                        ;; usage  (inject-cofx :datetime)
  *      (fn coeffect-handler
@@ -786,7 +965,7 @@ return re_frame.cofx.reg_cofx(id,handler);
  * 
  *   Second - Later, add an interceptor to an -fx event handler, using `inject-cofx`:
  * 
- *    #!clj
+ *    
  *    (re-frame.core/reg-event-fx            ;; when registering an event handler
  *      :event-id
  *      [ ... (inject-cofx :datetime) ... ]  ;; <-- create an injecting interceptor
@@ -816,8 +995,8 @@ return re_frame.cofx.reg_cofx(id,handler);
  *   
  */
 re_frame.core.inject_cofx = (function re_frame$core$inject_cofx(var_args){
-var G__13185 = arguments.length;
-switch (G__13185) {
+var G__23806 = arguments.length;
+switch (G__23806) {
 case 1:
 return re_frame.core.inject_cofx.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
@@ -827,7 +1006,7 @@ return re_frame.core.inject_cofx.cljs$core$IFn$_invoke$arity$2((arguments[(0)]),
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -852,8 +1031,8 @@ return re_frame.cofx.inject_cofx.cljs$core$IFn$_invoke$arity$2(id,value);
  *   console if it finds no matching registration.
  */
 re_frame.core.clear_cofx = (function re_frame$core$clear_cofx(var_args){
-var G__13187 = arguments.length;
-switch (G__13187) {
+var G__23808 = arguments.length;
+switch (G__23808) {
 case 0:
 return re_frame.core.clear_cofx.cljs$core$IFn$_invoke$arity$0();
 
@@ -863,7 +1042,7 @@ return re_frame.core.clear_cofx.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -888,7 +1067,7 @@ return re_frame.registrar.clear_handlers.cljs$core$IFn$_invoke$arity$2(re_frame.
  * 
  *   `(handler [original-error re-frame-error])`
  * 
- *   - `original-error`: A plaform-native Error object.
+ *   - `original-error`: A platform-native Error object.
  *   Represents the original error thrown by user code.
  *   this is the error you see when no `handler` is registered.
  * 
@@ -926,7 +1105,7 @@ re_frame.core.reg_event_error_handler(re_frame.interceptor.default_error_handler
  *   can be slow. So, you won't want this interceptor present in production
  *   code. So, you should condition it out like this:
  * 
- *    #!clj
+ *    
  *    (re-frame.core/reg-event-db
  *      :evt-id
  *      [(when ^boolean goog.DEBUG re-frame.core/debug)]  ;; <-- conditional
@@ -948,7 +1127,7 @@ re_frame.core.debug = re_frame.std_interceptors.debug;
  * 
  *   Examples:
  * 
- *    #!clj
+ *    
  *    (path :some :path)
  *    (path [:some :path])
  *    (path [:some :path] :to :here)
@@ -956,7 +1135,7 @@ re_frame.core.debug = re_frame.std_interceptors.debug;
  * 
  *   Example Use:
  * 
- *    #!clj
+ *    
  *    (reg-event-db
  *      :event-id
  *      (path [:a :b])  ;; <-- used here, in interceptor chain
@@ -970,23 +1149,23 @@ re_frame.core.debug = re_frame.std_interceptors.debug;
  *   
  */
 re_frame.core.path = (function re_frame$core$path(var_args){
-var args__5732__auto__ = [];
-var len__5726__auto___13223 = arguments.length;
-var i__5727__auto___13224 = (0);
+var args__5903__auto__ = [];
+var len__5897__auto___23913 = arguments.length;
+var i__5898__auto___23914 = (0);
 while(true){
-if((i__5727__auto___13224 < len__5726__auto___13223)){
-args__5732__auto__.push((arguments[i__5727__auto___13224]));
+if((i__5898__auto___23914 < len__5897__auto___23913)){
+args__5903__auto__.push((arguments[i__5898__auto___23914]));
 
-var G__13225 = (i__5727__auto___13224 + (1));
-i__5727__auto___13224 = G__13225;
+var G__23915 = (i__5898__auto___23914 + (1));
+i__5898__auto___23914 = G__23915;
 continue;
 } else {
 }
 break;
 }
 
-var argseq__5733__auto__ = ((((0) < args__5732__auto__.length))?(new cljs.core.IndexedSeq(args__5732__auto__.slice((0)),(0),null)):null);
-return re_frame.core.path.cljs$core$IFn$_invoke$arity$variadic(argseq__5733__auto__);
+var argseq__5904__auto__ = ((((0) < args__5903__auto__.length))?(new cljs.core.IndexedSeq(args__5903__auto__.slice((0)),(0),null)):null);
+return re_frame.core.path.cljs$core$IFn$_invoke$arity$variadic(argseq__5904__auto__);
 });
 
 (re_frame.core.path.cljs$core$IFn$_invoke$arity$variadic = (function (args){
@@ -996,9 +1175,9 @@ return cljs.core.apply.cljs$core$IFn$_invoke$arity$2(re_frame.std_interceptors.p
 (re_frame.core.path.cljs$lang$maxFixedArity = (0));
 
 /** @this {Function} */
-(re_frame.core.path.cljs$lang$applyTo = (function (seq13188){
-var self__5712__auto__ = this;
-return self__5712__auto__.cljs$core$IFn$_invoke$arity$variadic(cljs.core.seq(seq13188));
+(re_frame.core.path.cljs$lang$applyTo = (function (seq23809){
+var self__5883__auto__ = this;
+return self__5883__auto__.cljs$core$IFn$_invoke$arity$variadic(cljs.core.seq(seq23809));
 }));
 
 /**
@@ -1056,7 +1235,7 @@ return self__5712__auto__.cljs$core$IFn$_invoke$arity$variadic(cljs.core.seq(seq
  *   `:enrich` interceptor. Instead of forcing you to return the `db` from every
  *   non-applicable branch, you can return `nil` to use the given `db` value:
  * 
- *    #!clj
+ *    
  *    (def set-last-update
  *      (core/enrich
  *        (fn [{db :db} [_ {user :user}]]
@@ -1080,12 +1259,12 @@ return re_frame.std_interceptors.enrich(f);
  * 
  * If a dispatch looked like this:
  * 
- *    #!clj
+ *    
  *     (dispatch [:event-id {:x 1 :y 2 :z 3}])
  * 
  * Your event handlers can look like this:
  * 
- *    #!clj
+ *    
  *     (reg-event-fx
  *       :event-id
  *       [... unwrap ...]                    ;; <-- added to the interceptors
@@ -1104,7 +1283,7 @@ re_frame.core.unwrap = re_frame.std_interceptors.unwrap;
  * 
  *   Your event handlers will look like this:
  * 
- *    #!clj
+ *    
  *    (reg-event-db
  *      :event-id
  *      [... trim-v ...]    ;; <-- added to the interceptors
@@ -1137,7 +1316,7 @@ return re_frame.std_interceptors.after(f);
  * 
  *   Example Usage:
  * 
- *    #!clj
+ *    
  *    (defn my-f
  *      [a-val b-val]
  *      ... some computation on a and b in here)
@@ -1161,23 +1340,23 @@ return re_frame.std_interceptors.after(f);
  *   
  */
 re_frame.core.on_changes = (function re_frame$core$on_changes(var_args){
-var args__5732__auto__ = [];
-var len__5726__auto___13226 = arguments.length;
-var i__5727__auto___13227 = (0);
+var args__5903__auto__ = [];
+var len__5897__auto___23916 = arguments.length;
+var i__5898__auto___23917 = (0);
 while(true){
-if((i__5727__auto___13227 < len__5726__auto___13226)){
-args__5732__auto__.push((arguments[i__5727__auto___13227]));
+if((i__5898__auto___23917 < len__5897__auto___23916)){
+args__5903__auto__.push((arguments[i__5898__auto___23917]));
 
-var G__13228 = (i__5727__auto___13227 + (1));
-i__5727__auto___13227 = G__13228;
+var G__23918 = (i__5898__auto___23917 + (1));
+i__5898__auto___23917 = G__23918;
 continue;
 } else {
 }
 break;
 }
 
-var argseq__5733__auto__ = ((((2) < args__5732__auto__.length))?(new cljs.core.IndexedSeq(args__5732__auto__.slice((2)),(0),null)):null);
-return re_frame.core.on_changes.cljs$core$IFn$_invoke$arity$variadic((arguments[(0)]),(arguments[(1)]),argseq__5733__auto__);
+var argseq__5904__auto__ = ((((2) < args__5903__auto__.length))?(new cljs.core.IndexedSeq(args__5903__auto__.slice((2)),(0),null)):null);
+return re_frame.core.on_changes.cljs$core$IFn$_invoke$arity$variadic((arguments[(0)]),(arguments[(1)]),argseq__5904__auto__);
 });
 
 (re_frame.core.on_changes.cljs$core$IFn$_invoke$arity$variadic = (function (f,out_path,in_paths){
@@ -1187,13 +1366,13 @@ return cljs.core.apply.cljs$core$IFn$_invoke$arity$4(re_frame.std_interceptors.o
 (re_frame.core.on_changes.cljs$lang$maxFixedArity = (2));
 
 /** @this {Function} */
-(re_frame.core.on_changes.cljs$lang$applyTo = (function (seq13189){
-var G__13190 = cljs.core.first(seq13189);
-var seq13189__$1 = cljs.core.next(seq13189);
-var G__13191 = cljs.core.first(seq13189__$1);
-var seq13189__$2 = cljs.core.next(seq13189__$1);
-var self__5711__auto__ = this;
-return self__5711__auto__.cljs$core$IFn$_invoke$arity$variadic(G__13190,G__13191,seq13189__$2);
+(re_frame.core.on_changes.cljs$lang$applyTo = (function (seq23810){
+var G__23811 = cljs.core.first(seq23810);
+var seq23810__$1 = cljs.core.next(seq23810);
+var G__23812 = cljs.core.first(seq23810__$1);
+var seq23810__$2 = cljs.core.next(seq23810__$1);
+var self__5882__auto__ = this;
+return self__5882__auto__.cljs$core$IFn$_invoke$arity$variadic(G__23811,G__23812,seq23810__$2);
 }));
 
 /**
@@ -1229,8 +1408,8 @@ return re_frame.settings.reg_global_interceptor(interceptor);
  *   console if it finds no matching registration.
  */
 re_frame.core.clear_global_interceptor = (function re_frame$core$clear_global_interceptor(var_args){
-var G__13193 = arguments.length;
-switch (G__13193) {
+var G__23814 = arguments.length;
+switch (G__23814) {
 case 0:
 return re_frame.core.clear_global_interceptor.cljs$core$IFn$_invoke$arity$0();
 
@@ -1240,7 +1419,7 @@ return re_frame.core.clear_global_interceptor.cljs$core$IFn$_invoke$arity$1((arg
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -1266,7 +1445,7 @@ return re_frame.settings.clear_global_interceptors.cljs$core$IFn$_invoke$arity$1
  * 
  *   Example use:
  * 
- *    #!clj
+ *    
  *    (def my-interceptor
  *      (->interceptor
  *       :id     :my-interceptor
@@ -1291,41 +1470,41 @@ return re_frame.settings.clear_global_interceptors.cljs$core$IFn$_invoke$arity$1
  *    and `assoc-effect`
  */
 re_frame.core.__GT_interceptor = (function re_frame$core$__GT_interceptor(var_args){
-var args__5732__auto__ = [];
-var len__5726__auto___13236 = arguments.length;
-var i__5727__auto___13238 = (0);
+var args__5903__auto__ = [];
+var len__5897__auto___23920 = arguments.length;
+var i__5898__auto___23921 = (0);
 while(true){
-if((i__5727__auto___13238 < len__5726__auto___13236)){
-args__5732__auto__.push((arguments[i__5727__auto___13238]));
+if((i__5898__auto___23921 < len__5897__auto___23920)){
+args__5903__auto__.push((arguments[i__5898__auto___23921]));
 
-var G__13244 = (i__5727__auto___13238 + (1));
-i__5727__auto___13238 = G__13244;
+var G__23922 = (i__5898__auto___23921 + (1));
+i__5898__auto___23921 = G__23922;
 continue;
 } else {
 }
 break;
 }
 
-var argseq__5733__auto__ = ((((0) < args__5732__auto__.length))?(new cljs.core.IndexedSeq(args__5732__auto__.slice((0)),(0),null)):null);
-return re_frame.core.__GT_interceptor.cljs$core$IFn$_invoke$arity$variadic(argseq__5733__auto__);
+var argseq__5904__auto__ = ((((0) < args__5903__auto__.length))?(new cljs.core.IndexedSeq(args__5903__auto__.slice((0)),(0),null)):null);
+return re_frame.core.__GT_interceptor.cljs$core$IFn$_invoke$arity$variadic(argseq__5904__auto__);
 });
 
-(re_frame.core.__GT_interceptor.cljs$core$IFn$_invoke$arity$variadic = (function (p__13195){
-var map__13196 = p__13195;
-var map__13196__$1 = cljs.core.__destructure_map(map__13196);
-var m = map__13196__$1;
-var id = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__13196__$1,new cljs.core.Keyword(null,"id","id",-1388402092));
-var before = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__13196__$1,new cljs.core.Keyword(null,"before","before",-1633692388));
-var after = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__13196__$1,new cljs.core.Keyword(null,"after","after",594996914));
+(re_frame.core.__GT_interceptor.cljs$core$IFn$_invoke$arity$variadic = (function (p__23816){
+var map__23817 = p__23816;
+var map__23817__$1 = cljs.core.__destructure_map(map__23817);
+var m = map__23817__$1;
+var id = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__23817__$1,new cljs.core.Keyword(null,"id","id",-1388402092));
+var before = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__23817__$1,new cljs.core.Keyword(null,"before","before",-1633692388));
+var after = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__23817__$1,new cljs.core.Keyword(null,"after","after",594996914));
 return re_frame.utils.apply_kw.cljs$core$IFn$_invoke$arity$variadic(re_frame.interceptor.__GT_interceptor,cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2([m], 0));
 }));
 
 (re_frame.core.__GT_interceptor.cljs$lang$maxFixedArity = (0));
 
 /** @this {Function} */
-(re_frame.core.__GT_interceptor.cljs$lang$applyTo = (function (seq13194){
-var self__5712__auto__ = this;
-return self__5712__auto__.cljs$core$IFn$_invoke$arity$variadic(cljs.core.seq(seq13194));
+(re_frame.core.__GT_interceptor.cljs$lang$applyTo = (function (seq23815){
+var self__5883__auto__ = this;
+return self__5883__auto__.cljs$core$IFn$_invoke$arity$variadic(cljs.core.seq(seq23815));
 }));
 
 /**
@@ -1338,8 +1517,8 @@ return self__5712__auto__.cljs$core$IFn$_invoke$arity$variadic(cljs.core.seq(seq
  * `nil` if `key` is not present.
  */
 re_frame.core.get_coeffect = (function re_frame$core$get_coeffect(var_args){
-var G__13198 = arguments.length;
-switch (G__13198) {
+var G__23819 = arguments.length;
+switch (G__23819) {
 case 1:
 return re_frame.core.get_coeffect.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
@@ -1353,7 +1532,7 @@ return re_frame.core.get_coeffect.cljs$core$IFn$_invoke$arity$3((arguments[(0)])
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -1390,8 +1569,8 @@ return re_frame.interceptor.assoc_coeffect(context,key,value);
  * `nil` if `key` is not present.
  */
 re_frame.core.get_effect = (function re_frame$core$get_effect(var_args){
-var G__13200 = arguments.length;
-switch (G__13200) {
+var G__23821 = arguments.length;
+switch (G__23821) {
 case 1:
 return re_frame.core.get_effect.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
@@ -1405,7 +1584,7 @@ return re_frame.core.get_effect.cljs$core$IFn$_invoke$arity$3((arguments[(0)]),(
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -1457,7 +1636,7 @@ return re_frame.interceptor.enqueue(context,interceptors);
  * 
  *   Example Usage:
  * 
- *    #!clj
+ *    
  *    (defn my-logger      ;; my alternative logging function
  *      [& args]
  *      (post-it-somewhere (apply str args)))
@@ -1481,29 +1660,29 @@ return re_frame.loggers.set_loggers_BANG_(new_loggers);
  * 
  *   Example usage:
  * 
- *    #!clj
+ *    
  *    (console :error "Sure enough it happened:" a-var "and" another)
  *    (console :warn "Possible breach of containment wall at:" dt)
  *   
  */
 re_frame.core.console = (function re_frame$core$console(var_args){
-var args__5732__auto__ = [];
-var len__5726__auto___13266 = arguments.length;
-var i__5727__auto___13267 = (0);
+var args__5903__auto__ = [];
+var len__5897__auto___23925 = arguments.length;
+var i__5898__auto___23926 = (0);
 while(true){
-if((i__5727__auto___13267 < len__5726__auto___13266)){
-args__5732__auto__.push((arguments[i__5727__auto___13267]));
+if((i__5898__auto___23926 < len__5897__auto___23925)){
+args__5903__auto__.push((arguments[i__5898__auto___23926]));
 
-var G__13268 = (i__5727__auto___13267 + (1));
-i__5727__auto___13267 = G__13268;
+var G__23927 = (i__5898__auto___23926 + (1));
+i__5898__auto___23926 = G__23927;
 continue;
 } else {
 }
 break;
 }
 
-var argseq__5733__auto__ = ((((1) < args__5732__auto__.length))?(new cljs.core.IndexedSeq(args__5732__auto__.slice((1)),(0),null)):null);
-return re_frame.core.console.cljs$core$IFn$_invoke$arity$variadic((arguments[(0)]),argseq__5733__auto__);
+var argseq__5904__auto__ = ((((1) < args__5903__auto__.length))?(new cljs.core.IndexedSeq(args__5903__auto__.slice((1)),(0),null)):null);
+return re_frame.core.console.cljs$core$IFn$_invoke$arity$variadic((arguments[(0)]),argseq__5904__auto__);
 });
 
 (re_frame.core.console.cljs$core$IFn$_invoke$arity$variadic = (function (level,args){
@@ -1513,13 +1692,45 @@ return cljs.core.apply.cljs$core$IFn$_invoke$arity$3(re_frame.loggers.console,le
 (re_frame.core.console.cljs$lang$maxFixedArity = (1));
 
 /** @this {Function} */
-(re_frame.core.console.cljs$lang$applyTo = (function (seq13201){
-var G__13202 = cljs.core.first(seq13201);
-var seq13201__$1 = cljs.core.next(seq13201);
-var self__5711__auto__ = this;
-return self__5711__auto__.cljs$core$IFn$_invoke$arity$variadic(G__13202,seq13201__$1);
+(re_frame.core.console.cljs$lang$applyTo = (function (seq23825){
+var G__23826 = cljs.core.first(seq23825);
+var seq23825__$1 = cljs.core.next(seq23825);
+var self__5882__auto__ = this;
+return self__5882__auto__.cljs$core$IFn$_invoke$arity$variadic(G__23826,seq23825__$1);
 }));
 
+/**
+ * Schema for `:tags` of every op-type re-frame emits.
+ */
+re_frame.core.tag_schema = re_frame.trace.tag_schema;
+/**
+ * True iff runtime trace-tag validation is enabled.
+ */
+re_frame.core.validate_trace_QMARK_ = re_frame.trace.validate_trace_QMARK_;
+/**
+ * Enable or disable runtime trace-tag validation.
+ */
+re_frame.core.set_validate_trace_BANG_ = re_frame.trace.set_validate_trace_BANG_;
+/**
+ * Register a callback that receives each batch of finished traces.
+ */
+re_frame.core.register_trace_cb = re_frame.trace.register_trace_cb;
+/**
+ * Remove a trace callback by key.
+ */
+re_frame.core.remove_trace_cb = re_frame.trace.remove_trace_cb;
+/**
+ * Register a callback that receives assembled epoch records.
+ */
+re_frame.core.register_epoch_cb = re_frame.trace.register_epoch_cb;
+/**
+ * Remove an epoch callback by key.
+ */
+re_frame.core.remove_epoch_cb = re_frame.trace.remove_epoch_cb;
+/**
+ * Partition a finished trace batch into event epoch records.
+ */
+re_frame.core.assemble_epochs = re_frame.trace.assemble_epochs;
 /**
  * This is a utility function, typically used in testing.
  * 
@@ -1534,55 +1745,55 @@ var handlers = cljs.core.deref(re_frame.registrar.kind__GT_id__GT_handler);
 var app_db = cljs.core.deref(re_frame.db.app_db);
 var subs_cache = cljs.core.deref(re_frame.subs.query__GT_reaction);
 return (function (){
-var original_subs_13276 = cljs.core.set(cljs.core.vals(subs_cache));
-var current_subs_13277 = cljs.core.set(cljs.core.vals(cljs.core.deref(re_frame.subs.query__GT_reaction)));
-var seq__13203_13278 = cljs.core.seq(clojure.set.difference.cljs$core$IFn$_invoke$arity$2(current_subs_13277,original_subs_13276));
-var chunk__13204_13279 = null;
-var count__13205_13280 = (0);
-var i__13206_13281 = (0);
+var original_subs_23928 = cljs.core.set(cljs.core.vals(subs_cache));
+var current_subs_23929 = cljs.core.set(cljs.core.vals(cljs.core.deref(re_frame.subs.query__GT_reaction)));
+var seq__23831_23930 = cljs.core.seq(clojure.set.difference.cljs$core$IFn$_invoke$arity$2(current_subs_23929,original_subs_23928));
+var chunk__23832_23931 = null;
+var count__23833_23932 = (0);
+var i__23834_23933 = (0);
 while(true){
-if((i__13206_13281 < count__13205_13280)){
-var sub_13282 = chunk__13204_13279.cljs$core$IIndexed$_nth$arity$2(null, i__13206_13281);
-re_frame.interop.dispose_BANG_(sub_13282);
+if((i__23834_23933 < count__23833_23932)){
+var sub_23934 = chunk__23832_23931.cljs$core$IIndexed$_nth$arity$2(null,i__23834_23933);
+re_frame.interop.dispose_BANG_(sub_23934);
 
 
-var G__13283 = seq__13203_13278;
-var G__13284 = chunk__13204_13279;
-var G__13285 = count__13205_13280;
-var G__13286 = (i__13206_13281 + (1));
-seq__13203_13278 = G__13283;
-chunk__13204_13279 = G__13284;
-count__13205_13280 = G__13285;
-i__13206_13281 = G__13286;
+var G__23935 = seq__23831_23930;
+var G__23936 = chunk__23832_23931;
+var G__23937 = count__23833_23932;
+var G__23938 = (i__23834_23933 + (1));
+seq__23831_23930 = G__23935;
+chunk__23832_23931 = G__23936;
+count__23833_23932 = G__23937;
+i__23834_23933 = G__23938;
 continue;
 } else {
-var temp__5804__auto___13287 = cljs.core.seq(seq__13203_13278);
-if(temp__5804__auto___13287){
-var seq__13203_13288__$1 = temp__5804__auto___13287;
-if(cljs.core.chunked_seq_QMARK_(seq__13203_13288__$1)){
-var c__5525__auto___13289 = cljs.core.chunk_first(seq__13203_13288__$1);
-var G__13290 = cljs.core.chunk_rest(seq__13203_13288__$1);
-var G__13291 = c__5525__auto___13289;
-var G__13292 = cljs.core.count(c__5525__auto___13289);
-var G__13293 = (0);
-seq__13203_13278 = G__13290;
-chunk__13204_13279 = G__13291;
-count__13205_13280 = G__13292;
-i__13206_13281 = G__13293;
+var temp__5825__auto___23939 = cljs.core.seq(seq__23831_23930);
+if(temp__5825__auto___23939){
+var seq__23831_23940__$1 = temp__5825__auto___23939;
+if(cljs.core.chunked_seq_QMARK_(seq__23831_23940__$1)){
+var c__5694__auto___23941 = cljs.core.chunk_first(seq__23831_23940__$1);
+var G__23942 = cljs.core.chunk_rest(seq__23831_23940__$1);
+var G__23943 = c__5694__auto___23941;
+var G__23944 = cljs.core.count(c__5694__auto___23941);
+var G__23945 = (0);
+seq__23831_23930 = G__23942;
+chunk__23832_23931 = G__23943;
+count__23833_23932 = G__23944;
+i__23834_23933 = G__23945;
 continue;
 } else {
-var sub_13294 = cljs.core.first(seq__13203_13288__$1);
-re_frame.interop.dispose_BANG_(sub_13294);
+var sub_23946 = cljs.core.first(seq__23831_23940__$1);
+re_frame.interop.dispose_BANG_(sub_23946);
 
 
-var G__13295 = cljs.core.next(seq__13203_13288__$1);
-var G__13296 = null;
-var G__13297 = (0);
-var G__13298 = (0);
-seq__13203_13278 = G__13295;
-chunk__13204_13279 = G__13296;
-count__13205_13280 = G__13297;
-i__13206_13281 = G__13298;
+var G__23947 = cljs.core.next(seq__23831_23940__$1);
+var G__23948 = null;
+var G__23949 = (0);
+var G__23950 = (0);
+seq__23831_23930 = G__23947;
+chunk__23832_23931 = G__23948;
+count__23833_23932 = G__23949;
+i__23834_23933 = G__23950;
 continue;
 }
 } else {
@@ -1602,7 +1813,7 @@ return null;
  * Removes all events currently queued for processing
  */
 re_frame.core.purge_event_queue = (function re_frame$core$purge_event_queue(){
-return re_frame.router.event_queue.re_frame$router$IEventQueue$purge$arity$1(null, );
+return re_frame.router.event_queue.re_frame$router$IEventQueue$purge$arity$1(null);
 });
 /**
  * Registers the given function `f` to be called after each event is processed.
@@ -1624,8 +1835,8 @@ return re_frame.router.event_queue.re_frame$router$IEventQueue$purge$arity$1(nul
  *   
  */
 re_frame.core.add_post_event_callback = (function re_frame$core$add_post_event_callback(var_args){
-var G__13208 = arguments.length;
-switch (G__13208) {
+var G__23844 = arguments.length;
+switch (G__23844) {
 case 1:
 return re_frame.core.add_post_event_callback.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
@@ -1635,7 +1846,7 @@ return re_frame.core.add_post_event_callback.cljs$core$IFn$_invoke$arity$2((argu
 
 break;
 default:
-throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+throw (new Error(["Invalid arity: ",arguments.length].join("")));
 
 }
 });
@@ -1645,7 +1856,7 @@ return re_frame.core.add_post_event_callback.cljs$core$IFn$_invoke$arity$2(f,f);
 }));
 
 (re_frame.core.add_post_event_callback.cljs$core$IFn$_invoke$arity$2 = (function (id,f){
-return re_frame.router.event_queue.re_frame$router$IEventQueue$add_post_event_callback$arity$3(null, id,f);
+return re_frame.router.event_queue.re_frame$router$IEventQueue$add_post_event_callback$arity$3(null,id,f);
 }));
 
 (re_frame.core.add_post_event_callback.cljs$lang$maxFixedArity = 2);
@@ -1656,33 +1867,43 @@ return re_frame.router.event_queue.re_frame$router$IEventQueue$add_post_event_ca
  *   Such a function must have been previously registered via `add-post-event-callback`
  */
 re_frame.core.remove_post_event_callback = (function re_frame$core$remove_post_event_callback(id){
-return re_frame.router.event_queue.re_frame$router$IEventQueue$remove_post_event_callback$arity$2(null, id);
+return re_frame.router.event_queue.re_frame$router$IEventQueue$remove_post_event_callback$arity$2(null,id);
 });
+/**
+ * Runtime-readable string identifying the deployed re-frame artifact —
+ * useful for devtools, instrumentation, and version-floor probes that
+ * need to know which re-frame they're running against without parsing
+ * pom.xml.
+ * 
+ * Re-exported from `re-frame.config/version`; see that namespace for
+ * the build-time override hook (`:closure-defines` in shadow-cljs).
+ */
+re_frame.core.version = re_frame.config.version;
 /**
  * Deprecated. Use `reg-event-db` instead.
  */
 re_frame.core.register_handler = (function re_frame$core$register_handler(var_args){
-var args__5732__auto__ = [];
-var len__5726__auto___13301 = arguments.length;
-var i__5727__auto___13302 = (0);
+var args__5903__auto__ = [];
+var len__5897__auto___23952 = arguments.length;
+var i__5898__auto___23953 = (0);
 while(true){
-if((i__5727__auto___13302 < len__5726__auto___13301)){
-args__5732__auto__.push((arguments[i__5727__auto___13302]));
+if((i__5898__auto___23953 < len__5897__auto___23952)){
+args__5903__auto__.push((arguments[i__5898__auto___23953]));
 
-var G__13303 = (i__5727__auto___13302 + (1));
-i__5727__auto___13302 = G__13303;
+var G__23954 = (i__5898__auto___23953 + (1));
+i__5898__auto___23953 = G__23954;
 continue;
 } else {
 }
 break;
 }
 
-var argseq__5733__auto__ = ((((0) < args__5732__auto__.length))?(new cljs.core.IndexedSeq(args__5732__auto__.slice((0)),(0),null)):null);
-return re_frame.core.register_handler.cljs$core$IFn$_invoke$arity$variadic(argseq__5733__auto__);
+var argseq__5904__auto__ = ((((0) < args__5903__auto__.length))?(new cljs.core.IndexedSeq(args__5903__auto__.slice((0)),(0),null)):null);
+return re_frame.core.register_handler.cljs$core$IFn$_invoke$arity$variadic(argseq__5904__auto__);
 });
 
 (re_frame.core.register_handler.cljs$core$IFn$_invoke$arity$variadic = (function (args){
-re_frame.core.console.cljs$core$IFn$_invoke$arity$variadic(new cljs.core.Keyword(null,"warn","warn",-436710552),cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2(["re-frame: \"register-handler\" has been renamed \"reg-event-db\" (look for registration of ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(cljs.core.first(args)),")"], 0));
+re_frame.core.console.cljs$core$IFn$_invoke$arity$variadic(new cljs.core.Keyword(null,"warn","warn",-436710552),cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2(["re-frame: \"register-handler\" has been renamed \"reg-event-db\" (look for registration of ",(""+cljs.core.str.cljs$core$IFn$_invoke$arity$1(cljs.core.first(args))),")"], 0));
 
 return cljs.core.apply.cljs$core$IFn$_invoke$arity$2(re_frame.core.reg_event_db,args);
 }));
@@ -1690,36 +1911,36 @@ return cljs.core.apply.cljs$core$IFn$_invoke$arity$2(re_frame.core.reg_event_db,
 (re_frame.core.register_handler.cljs$lang$maxFixedArity = (0));
 
 /** @this {Function} */
-(re_frame.core.register_handler.cljs$lang$applyTo = (function (seq13209){
-var self__5712__auto__ = this;
-return self__5712__auto__.cljs$core$IFn$_invoke$arity$variadic(cljs.core.seq(seq13209));
+(re_frame.core.register_handler.cljs$lang$applyTo = (function (seq23848){
+var self__5883__auto__ = this;
+return self__5883__auto__.cljs$core$IFn$_invoke$arity$variadic(cljs.core.seq(seq23848));
 }));
 
 /**
  * Deprecated. Use `reg-sub-raw` instead.
  */
 re_frame.core.register_sub = (function re_frame$core$register_sub(var_args){
-var args__5732__auto__ = [];
-var len__5726__auto___13304 = arguments.length;
-var i__5727__auto___13305 = (0);
+var args__5903__auto__ = [];
+var len__5897__auto___23955 = arguments.length;
+var i__5898__auto___23956 = (0);
 while(true){
-if((i__5727__auto___13305 < len__5726__auto___13304)){
-args__5732__auto__.push((arguments[i__5727__auto___13305]));
+if((i__5898__auto___23956 < len__5897__auto___23955)){
+args__5903__auto__.push((arguments[i__5898__auto___23956]));
 
-var G__13306 = (i__5727__auto___13305 + (1));
-i__5727__auto___13305 = G__13306;
+var G__23957 = (i__5898__auto___23956 + (1));
+i__5898__auto___23956 = G__23957;
 continue;
 } else {
 }
 break;
 }
 
-var argseq__5733__auto__ = ((((0) < args__5732__auto__.length))?(new cljs.core.IndexedSeq(args__5732__auto__.slice((0)),(0),null)):null);
-return re_frame.core.register_sub.cljs$core$IFn$_invoke$arity$variadic(argseq__5733__auto__);
+var argseq__5904__auto__ = ((((0) < args__5903__auto__.length))?(new cljs.core.IndexedSeq(args__5903__auto__.slice((0)),(0),null)):null);
+return re_frame.core.register_sub.cljs$core$IFn$_invoke$arity$variadic(argseq__5904__auto__);
 });
 
 (re_frame.core.register_sub.cljs$core$IFn$_invoke$arity$variadic = (function (args){
-re_frame.core.console.cljs$core$IFn$_invoke$arity$variadic(new cljs.core.Keyword(null,"warn","warn",-436710552),cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2(["re-frame: \"register-sub\" is used to register the event ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(cljs.core.first(args))," but it is a deprecated part of the API. Please use \"reg-sub-raw\" instead."], 0));
+re_frame.core.console.cljs$core$IFn$_invoke$arity$variadic(new cljs.core.Keyword(null,"warn","warn",-436710552),cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2(["re-frame: \"register-sub\" is used to register the event ",(""+cljs.core.str.cljs$core$IFn$_invoke$arity$1(cljs.core.first(args)))," but it is a deprecated part of the API. Please use \"reg-sub-raw\" instead."], 0));
 
 return cljs.core.apply.cljs$core$IFn$_invoke$arity$2(re_frame.core.reg_sub_raw,args);
 }));
@@ -1727,9 +1948,9 @@ return cljs.core.apply.cljs$core$IFn$_invoke$arity$2(re_frame.core.reg_sub_raw,a
 (re_frame.core.register_sub.cljs$lang$maxFixedArity = (0));
 
 /** @this {Function} */
-(re_frame.core.register_sub.cljs$lang$applyTo = (function (seq13210){
-var self__5712__auto__ = this;
-return self__5712__auto__.cljs$core$IFn$_invoke$arity$variadic(cljs.core.seq(seq13210));
+(re_frame.core.register_sub.cljs$lang$applyTo = (function (seq23850){
+var self__5883__auto__ = this;
+return self__5883__auto__.cljs$core$IFn$_invoke$arity$variadic(cljs.core.seq(seq23850));
 }));
 
 

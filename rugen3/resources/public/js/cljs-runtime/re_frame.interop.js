@@ -1,7 +1,7 @@
 goog.provide('re_frame.interop');
 re_frame.interop.on_load = (function re_frame$interop$on_load(listener){
 try{return goog.events.listen(self,"load",listener);
-}catch (e12060){var _ = e12060;
+}catch (e22235){var _ = e22235;
 return null;
 }});
 re_frame.interop.next_tick = goog.async.nextTick;
@@ -11,6 +11,9 @@ re_frame.interop.after_render = reagent.core.after_render;
  * @define {boolean}
  */
 re_frame.interop.debug_enabled_QMARK_ = goog.DEBUG;
+re_frame.interop.new_uuid = (function re_frame$interop$new_uuid(){
+return cljs.core.random_uuid();
+});
 re_frame.interop.ratom = (function re_frame$interop$ratom(x){
 return reagent.core.atom.cljs$core$IFn$_invoke$arity$1(x);
 });
@@ -53,8 +56,24 @@ return reagent.ratom.add_on_dispose_BANG_(a_ratom,f);
 re_frame.interop.dispose_BANG_ = (function re_frame$interop$dispose_BANG_(a_ratom){
 return reagent.ratom.dispose_BANG_(a_ratom);
 });
+/**
+ * Schedule `f` to run after `ms` milliseconds. Returns a handle that
+ *   can be passed to `clear-timeout!` to cancel before it fires.
+ */
 re_frame.interop.set_timeout_BANG_ = (function re_frame$interop$set_timeout_BANG_(f,ms){
 return setTimeout(f,ms);
+});
+/**
+ * Cancel a pending timeout previously scheduled with `set-timeout!`.
+ *   No-op if `handle` is nil or the timeout has already fired.
+ */
+re_frame.interop.clear_timeout_BANG_ = (function re_frame$interop$clear_timeout_BANG_(handle){
+if((!((handle == null)))){
+clearTimeout(handle);
+} else {
+}
+
+return null;
 });
 re_frame.interop.now = (function re_frame$interop$now(){
 if((((typeof performance !== 'undefined')) && ((typeof performance !== 'undefined') && (typeof performance.now !== 'undefined')))){
@@ -69,18 +88,18 @@ return Date.now();
  */
 re_frame.interop.reagent_id = (function re_frame$interop$reagent_id(reactive_val){
 if((((!((reactive_val == null))))?((((false) || ((cljs.core.PROTOCOL_SENTINEL === reactive_val.reagent$ratom$IReactiveAtom$))))?true:false):false)){
-return [(function (){var pred__12083 = cljs.core.instance_QMARK_;
-var expr__12084 = reactive_val;
-if(cljs.core.truth_((pred__12083.cljs$core$IFn$_invoke$arity$2 ? pred__12083.cljs$core$IFn$_invoke$arity$2(reagent.ratom.RAtom,expr__12084) : pred__12083.call(null, reagent.ratom.RAtom,expr__12084)))){
+return (""+cljs.core.str.cljs$core$IFn$_invoke$arity$1((function (){var pred__22242 = cljs.core.instance_QMARK_;
+var expr__22243 = reactive_val;
+if(cljs.core.truth_((pred__22242.cljs$core$IFn$_invoke$arity$2 ? pred__22242.cljs$core$IFn$_invoke$arity$2(reagent.ratom.RAtom,expr__22243) : pred__22242.call(null,reagent.ratom.RAtom,expr__22243)))){
 return "ra";
 } else {
-if(cljs.core.truth_((pred__12083.cljs$core$IFn$_invoke$arity$2 ? pred__12083.cljs$core$IFn$_invoke$arity$2(reagent.ratom.RCursor,expr__12084) : pred__12083.call(null, reagent.ratom.RCursor,expr__12084)))){
+if(cljs.core.truth_((pred__22242.cljs$core$IFn$_invoke$arity$2 ? pred__22242.cljs$core$IFn$_invoke$arity$2(reagent.ratom.RCursor,expr__22243) : pred__22242.call(null,reagent.ratom.RCursor,expr__22243)))){
 return "rc";
 } else {
-if(cljs.core.truth_((pred__12083.cljs$core$IFn$_invoke$arity$2 ? pred__12083.cljs$core$IFn$_invoke$arity$2(reagent.ratom.Reaction,expr__12084) : pred__12083.call(null, reagent.ratom.Reaction,expr__12084)))){
+if(cljs.core.truth_((pred__22242.cljs$core$IFn$_invoke$arity$2 ? pred__22242.cljs$core$IFn$_invoke$arity$2(reagent.ratom.Reaction,expr__22243) : pred__22242.call(null,reagent.ratom.Reaction,expr__22243)))){
 return "rx";
 } else {
-if(cljs.core.truth_((pred__12083.cljs$core$IFn$_invoke$arity$2 ? pred__12083.cljs$core$IFn$_invoke$arity$2(reagent.ratom.Track,expr__12084) : pred__12083.call(null, reagent.ratom.Track,expr__12084)))){
+if(cljs.core.truth_((pred__22242.cljs$core$IFn$_invoke$arity$2 ? pred__22242.cljs$core$IFn$_invoke$arity$2(reagent.ratom.Track,expr__22243) : pred__22242.call(null,reagent.ratom.Track,expr__22243)))){
 return "tr";
 } else {
 return "other";
@@ -88,7 +107,7 @@ return "other";
 }
 }
 }
-})(),cljs.core.str.cljs$core$IFn$_invoke$arity$1(cljs.core.hash(reactive_val))].join('');
+})())+cljs.core.str.cljs$core$IFn$_invoke$arity$1(cljs.core.hash(reactive_val)));
 } else {
 return null;
 }
