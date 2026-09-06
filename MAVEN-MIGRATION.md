@@ -35,8 +35,6 @@ all nine deterministic artifacts identical to the Kotlin/Gradle baseline.
   them. hello-web is already done.
 * A live `cdk deploy`. Everything up to and including the synthesised template is verified;
   the deploy itself is a deliberate act.
-* Decide about `uplift-json`'s stale `META-INF/services/javax.annotation.processing.Processor`,
-  which names a class that lives in `uplift-json-gen`.
 
 ### Defects found and fixed
 
@@ -62,6 +60,22 @@ These were pre-existing, not migration damage. Each is a separate commit.
    until `package` has run, so a bare `mvn uplift:init` failed.
 3. The generated CDK pom was given the lambda zips as jar dependencies, which the container
    cannot resolve. Only jars are injected now.
+4. The task dependency chain was lost. Gradle had `uplift` depend on `uplift-bootstrap`
+   depend on `uplift-init`, so the CDK app was always generated before any command ran.
+   Maven has no such chain for a goal invoked from the command line, so `uplift:deploy`
+   mounted an empty `/opt/app` and cdk reported `--app is required either in command-line,
+   in cdk.json or in ~/.cdk.json`. Deploy, bootstrap and destroy were all affected. Two
+   changes: `build.sh deploy` now spells out `uplift:init uplift:bootstrap uplift:deploy`,
+   and every goal that drives the container calls `ensureCdkApp()`, which generates the app
+   when `cdk-app/cdk.json` is absent. The test is for that file and not for the directory,
+   because `cdkApp()` creates the directory, and because `CdkApp.initialize` begins by
+   clearing it, which would delete an already synthesised template. `DestroyMojo` already
+   carried the directory form of this test, and it was dead code for the same reason.
+
+   This one slipped through the baseline comparison, because the CDK artifacts were only
+   ever reached through `build.sh synth`, which runs `uplift:init` first. The deploy entry
+   point was never exercised. The check that closes the hole needs no AWS: delete
+   `ascension/target/cdk-app` and run `mvn -pl ascension uplift:synth` on its own.
 
 ### Things that are not reproducible, and how they are handled
 
