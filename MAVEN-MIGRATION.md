@@ -6,52 +6,97 @@ Out of scope: `rugen3`, the shadow-cljs frontend. It is not part of the Gradle b
 
 ## 0. Status
 
-Phase 0 is done and verified. The Maven work (sections 1 onward) has not started.
+The Maven build is in place and verified. Both builds still work side by side; the Gradle
+files in uplift and taninim have not been deleted yet.
 
 | Step | State |
 | --- | --- |
 | 0a Capture baseline | done, `~/taninim-maven-baseline/kotlin-gradle` |
-| 0b Delete dead code | done, `LambdaTask.kt`, `buildSrc/`, two dead imports |
+| 0b Delete dead code | done |
 | 0c Port plugin to Java on Gradle | done, verified |
+| 1-2 uplift parent and 19 library poms | done, 293 tests, counts match Gradle per module |
+| 3 json-gen as an annotation processor | done, 59 generated sources across 3 consumers |
+| 4 uplift-maven-plugin | done, 7 goals |
+| 5 taninim poms | done |
+| 6 native-lambda under Maven | done, byte identical to baseline |
+| 7 lambda-test with native-maven-plugin | configured, native compile not exercised |
+| 8 examples/hello-web | done, fully converted including README |
+| 9 CDK path on ascension | done, template byte identical to baseline |
+| 10 README | done |
+| 11 Live deploy | not done, deliberately. A manual decision |
 
-Verification result: `compare-baseline.sh verify` reports all nine deterministic artifacts
-identical, including both rendered Dockerfiles with their full ordered classpaths, the
-generated CDK pom, `CloudApp.java`, and the 10KB CloudFormation template. The port is
-1022 lines of core across 10 classes plus 714 lines of Gradle adapters across 13 classes,
-replacing 1106 lines of Kotlin. No Kotlin remains in either repository.
+`./build.sh` builds all three: 323 tests, no failures. `compare-baseline.sh verify` reports
+all nine deterministic artifacts identical to the Kotlin/Gradle baseline.
 
-Found while executing, each recorded in the relevant section below:
+### What is left
 
-1. `LambdaLooper.run()` could not terminate. A refactor in commit `0891ecc3` dropped
+* Delete the Gradle files in uplift and taninim, in one commit, once you are satisfied.
+  `uplift-gradle-plugins` and its dependency on a Maven-built `uplift-plugin-core` go with
+  them. hello-web is already done.
+* A live `cdk deploy`. Everything up to and including the synthesised template is verified;
+  the deploy itself is a deliberate act.
+* Decide about `uplift-json`'s stale `META-INF/services/javax.annotation.processing.Processor`,
+  which names a class that lives in `uplift-json-gen`.
+
+### Defects found and fixed
+
+These were pre-existing, not migration damage. Each is a separate commit.
+
+1. `LambdaLooper.run()` could not terminate. Commit `0891ecc3` dropped
    `.takeWhile(Optional::isPresent)` from an infinite `Stream.generate`, so an exhausted or
    closed source spun at 100% CPU forever. It hung `:uplift-lambda:test` indefinitely and
-   also broke the production shutdown path, since `HttpInvocationSource.next()` returns
-   empty only when closed. Fixed by restoring the `takeWhile`, which was a precondition for
-   any of this work: the build could not complete without it.
-2. Native binaries and zips are not byte-reproducible, so they cannot be the comparison
-   currency. See section 8.
-3. The CDK template's key order is not stable either. `LambdaStacker` builds lambda
-   environments with `Map.of`, whose iteration order is randomised per JVM. Confirmed by
-   running one synth three times and seeing the order change. `compare-baseline.sh`
-   normalises it.
-4. The Kotlin `UriType.ifType` always returned the URI regardless of type, because
-   `takeIf {}.let { uri }` discards the receiver. Both `distfile` and `disturi` were
-   therefore always set, making the template's local-file branch dead code. The Java port
-   implements the intended behaviour. No effect on current output, since `javaDist` is a
-   hardcoded https URL.
-5. The plugin has no synth-only task, so a template baseline needs `uplift-init`, a manual
-   copy of the zips into the staging directory, then `cdk synth` in the container. Worth
-   adding as a goal during the Maven work, since it is the only way to check the CDK path
-   without touching AWS.
+   broke the production shutdown path, since `HttpInvocationSource.next()` returns empty
+   only when closed. The build could not complete before this was fixed.
+2. `LambdaHarness`'s two-argument constructor passed a null clock to
+   `LambdaClientSettings`, which requires it, while `FlambdaSettings` got it through
+   `resolve()`. Every test written the documented way failed, including the example's.
+   It was masked under Gradle, where hello-web's test JVM never got `--enable-preview` and
+   the tests failed earlier with `UnsupportedClassVersionError`.
 
-Still open, both pre-existing and unrelated to the plugin:
+### Defects found in the port, and fixed
 
-* `:lambda-test:test` fails with a direct buffer `OutOfMemoryError`, deterministically and
-  at the same byte counts on repeat runs. `Segments.DEFAULT_BASE_POOL_SIZE` is `1 << 24`,
-  exactly the 16MB allocation that fails, against the 512MB default direct memory limit.
-  About 31 such pools accumulate. The tests that do run pass; the executor JVM dies.
-  Not triggered by the port, which `lambda-test` does not use. It may have become reachable
-  only once finding 1 was fixed, since these tests could not previously run to completion.
+1. The compiler property was named `uplift.addModules`, colliding with the plugin's own
+   parameter of that name, so Maven fed it to `native-image` and the binary was built with
+   `--add-modules jdk.incubator.vector`, which Gradle never did. Renamed `jvm.addModules`.
+2. The CDK goals took the stack builder jar from the project artifact, which has no file
+   until `package` has run, so a bare `mvn uplift:init` failed.
+3. The generated CDK pom was given the lambda zips as jar dependencies, which the container
+   cannot resolve. Only jars are injected now.
+
+### Things that are not reproducible, and how they are handled
+
+1. Native binaries and zips are not byte-reproducible: `-g` plus a timestamp in the zip
+   entry. Compared by structure. See section 8.
+2. The CDK template's key order varies per JVM, because `LambdaStacker` builds lambda
+   environments with `Map.of`. Confirmed by running one synth three times. Normalised.
+3. Classpath order differs between Gradle and Maven. Verified irrelevant here, then
+   normalised: no class appears in two jars, and every duplicated resource is byte
+   identical or names the same class.
+
+### Maven behaviours worth knowing
+
+1. `maven-plugin-plugin` 3.15.1 cannot read Java 25 class files, failing with
+   "Unsupported class file major version 69". 3.15.2 can.
+2. `aws-cdk-lib` asks for `constructs` as the range `[10.0.0,11.0.0)`. Maven resolves a
+   range by fetching the pom of every version in it: 623 requests, minutes of wall clock.
+   Pinned in `dependencyManagement`, it is 4 requests.
+3. A GitHub Packages `<repositories>` entry is queried for every artifact, including
+   everything on central, because Maven has no per-repository group filter. Gradle had
+   `mavenContent { includeGroup(...) }`. Left out of the poms; it belongs in
+   `settings.xml`.
+4. Declaring a dependency twice narrows rather than widens. `uplift-json-samplegen` lists
+   `uplift-hash` under both `implementation` and `testImplementation`, which is harmless in
+   Gradle; in Maven the second declaration overrode the first and dropped it from the
+   compile classpath.
+5. Maven cannot have the aggregator and a module share coordinates. Gradle allowed a root
+   project and a subproject both called `taninim`, so the aggregator is `taninim-parent`.
+
+### One incidental improvement
+
+`:lambda-test:test` ran 4 tests under Gradle and then died with a direct buffer
+`OutOfMemoryError`. Under Maven it runs all 24 and passes. Gradle's test JVM defaults to
+`-Xmx512m`, which caps direct memory at 512MB, and roughly 31 of the 16MB `Segments` pools
+exhaust it. Surefire's fork gets a much larger default. The problem was sizing, not a leak.
 
 ## 1. Current build, summarized
 
