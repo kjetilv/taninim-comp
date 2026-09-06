@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.github.kjetilv</groupId>
+  <artifactId>taninim-comp</artifactId>
+  <version>0.1.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>taninim-comp</name>
+  <description>
+    Aggregator for the uplift and taninim submodules. Carries no configuration: each
+    submodule is a standalone repository with its own parent pom, and must build alone.
+  </description>
+
+  <!--
+    This works only when uplift-maven-plugin is already installed, because Maven resolves
+    build plugins before it builds anything and cannot take one from the same reactor run.
+    On a clean machine, or whenever the plugin changes, use ./build.sh instead, which runs
+    uplift first and then taninim. See MAVEN-MIGRATION.md section 3.
+  -->
+  <modules>
+    <module>uplift</module>
+    <module>taninim</module>
+  </modules>
+
+</project>
