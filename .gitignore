@@ -13,3 +13,6 @@ build
 /.idea/sourcegraph.xml
 /.idea/vcs.xml
 /.idea/.gitignore
+
+### Maven ###
+target/
