@@ -50,6 +50,26 @@ normalizeTemplate() {
         | python3 -c 'import json,sys; json.dump(json.load(sys.stdin), sys.stdout, sort_keys=True, indent=1)'
 }
 
+# Classpath order differs between Gradle and Maven, because each resolves the dependency
+# graph in its own order. It carries no meaning here: no class appears in two of the jars,
+# and every duplicated resource (META-INF/jpms.args, the annotation processor service file)
+# is byte identical or names the same class. Verified before deciding to sort.
+normalizeDockerfile() {
+    python3 - "$1" <<'PYEOF'
+import sys
+lines = []
+for line in open(sys.argv[1]).read().split("\n"):
+    marker = "--class-path "
+    if marker in line:
+        head, _, rest = line.partition(marker)
+        entries, sep, tail = rest.partition(" ")
+        line = head + marker + ":".join(sorted(entries.split(":"))) + sep + tail
+    lines.append(line)
+# join, not print per line: printing would append a newline the original did not have
+sys.stdout.write("\n".join(lines))
+PYEOF
+}
+
 collect() {
     local out="$1"
     mkdir -p "$out"
@@ -59,7 +79,7 @@ collect() {
         dir="$(buildDir "$module")" || { echo "MISSING: no build/target dir for $module" >&2; continue; }
 
         [[ -f "$dir/uplift/Dockerfile" ]] \
-            && cp "$dir/uplift/Dockerfile" "$out/$module.Dockerfile"
+            && normalizeDockerfile "$dir/uplift/Dockerfile" > "$out/$module.Dockerfile"
 
         [[ -d "$dir/uplift/classpath" ]] \
             && (cd "$dir/uplift/classpath" && ls -1 | sort) > "$out/$module.classpath.txt"
