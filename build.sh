@@ -68,7 +68,10 @@ deploy)
     [[ "$reply" == "y" || "$reply" == "Y" ]] || { echo "Nothing done."; exit 1; }
     buildUplift
     buildTaninim
-    mvn -B -f "$ROOT/taninim/pom.xml" -pl ascension uplift:deploy
+    # The whole chain, as Gradle ran it: uplift dependsOn uplift-bootstrap dependsOn
+    # uplift-init. Maven has no task dependencies for directly invoked goals, so the chain
+    # is spelled out here.
+    mvn -B -f "$ROOT/taninim/pom.xml" -pl ascension uplift:init uplift:bootstrap uplift:deploy
     ;;
 *)
     echo "usage: $(basename "$0") {all|uplift|taninim|example|ping|synth|deploy}" >&2
