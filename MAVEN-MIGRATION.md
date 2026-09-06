@@ -76,6 +76,22 @@ These were pre-existing, not migration damage. Each is a separate commit.
    ever reached through `build.sh synth`, which runs `uplift:init` first. The deploy entry
    point was never exercised. The check that closes the hole needs no AWS: delete
    `ascension/target/cdk-app` and run `mvn -pl ascension uplift:synth` on its own.
+5. The deploy report threw after the deploy had succeeded. Gradle reported on the zips
+   where they were built, in `kudu/build/uplift/`, so the native binary sat beside each
+   zip and `StackReport.binaryFor` found it. Maven stages the zips into the deploying
+   module and resolves them from the local repository, so nothing sits beside them: the
+   report asked for the modification time of a file that was not there and failed the
+   build with `Failed to read time of .../ascension/target/uplift/kudu`.
+
+   `binaryFor` now returns only a file that exists, and each zip's entries are listed
+   instead. The entry carries the binary's real size and time, so the information is not
+   lost, and no 5MB binary is copied between modules to produce a log line. The zip size
+   check also moved to before the `cdk deploy` call, since after it, it can only report
+   damage.
+
+   `compare-baseline.sh` cannot catch this class of defect. It compares generated
+   artifacts, and both defects above live past the point where those are produced. The
+   deploy goal beyond `cdk deploy` is verified only by running it.
 
 ### Things that are not reproducible, and how they are handled
 
