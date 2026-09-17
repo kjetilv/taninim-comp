@@ -2,28 +2,137 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.github.kjetilv</groupId>
-  <artifactId>taninim-comp</artifactId>
-  <version>0.1.1-SNAPSHOT</version>
-  <packaging>pom</packaging>
+    <groupId>com.github.kjetilv</groupId>
+    <artifactId>taninim-comp</artifactId>
+    <version>0.1.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
-  <name>taninim-comp</name>
-  <description>
-    Aggregator for the uplift and taninim submodules. Carries no configuration: each
-    submodule is a standalone repository with its own parent pom, and must build alone.
-  </description>
+    <name>taninim-comp</name>
+    <description>
+        Aggregator for the uplift and taninim submodules. Carries no configuration: each
+        submodule is a standalone repository with its own parent pom, and must build alone.
+    </description>
 
-  <!--
-    This works only when uplift-maven-plugin is already installed, because Maven resolves
-    build plugins before it builds anything and cannot take one from the same reactor run.
-    On a clean machine, or whenever the plugin changes, use ./build.sh instead, which runs
-    uplift first and then taninim. See MAVEN-MIGRATION.md section 3.
-  -->
-  <modules>
-    <module>uplift</module>
-    <module>taninim</module>
-  </modules>
+    <!--
+      This works only when uplift-maven-plugin is already installed, because Maven resolves
+      build plugins before it builds anything and cannot take one from the same reactor run.
+      On a clean machine, or whenever the plugin changes, use ./build.sh instead, which runs
+      uplift first and then taninim. See MAVEN-MIGRATION.md section 3.
+    -->
+    <modules>
+        <module>uplift</module>
+        <module>taninim</module>
+    </modules>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-edam</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-edamame</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-flambda</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-flogs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-fq</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift.hash</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-json</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-json-anno</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-json-gen</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-json-jmh</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-json-mame</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-json-match</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-json-samplegen</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-kernel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-lambda</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-plugin-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-s3</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-synchttp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-synchttp-jmh</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kjetilv.uplift</groupId>
+                <artifactId>uplift-util</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>
