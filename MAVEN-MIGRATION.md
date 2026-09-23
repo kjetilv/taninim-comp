@@ -115,7 +115,7 @@ These were pre-existing, not migration damage. Each is a separate commit.
    `mavenContent { includeGroup(...) }`. Left out of the poms; it belongs in
    `settings.xml`.
 4. Declaring a dependency twice narrows rather than widens. `uplift-json-samplegen` lists
-   `uplift-hash` under both `implementation` and `testImplementation`, which is harmless in
+   `uplift.hash` under both `implementation` and `testImplementation`, which is harmless in
    Gradle; in Maven the second declaration overrode the first and dropped it from the
    compile classpath.
 5. Maven cannot have the aggregator and a module share coordinates. Gradle allowed a root
@@ -291,7 +291,7 @@ It must be rewritten to the `Property` setter form in the same change.
 Because consumer files have to be touched anyway, the misspelled class name
 `NativeLamdbdaTask` can be corrected to `NativeLambdaTask` at the same time. Renaming does
 not affect any build output, so it adds no verification risk. It touches
-`kudu`, `yellin` and `hello-web-service`.
+`Main`, `yellin` and `hello-web-service`.
 
 Reason: the plugin has no tests. `src/main` only. The only verification currency is the
 artifacts it produces, namely the kudu zip and the CDK synth template. Splitting the work
@@ -398,7 +398,7 @@ Modules and their specifics:
 | Module | Notes |
 | --- | --- |
 | `uplift-util`, `uplift-flogs`, `uplift-json-anno` | no `build.gradle.kts` today, still need minimal poms |
-| `uplift-hash`, `uplift-json`, `uplift-kernel`, `uplift-s3`, `uplift-synchttp`, `uplift-edam`, `uplift-edamame`, `uplift-json-mame`, `uplift-json-match`, `uplift-json-gen`, `uplift-fq` | plain library poms, translate the dependency lists |
+| `uplift.hash`, `uplift-json`, `uplift-kernel`, `uplift-s3`, `uplift-synchttp`, `uplift-edam`, `uplift-edamame`, `uplift-json-mame`, `uplift-json-match`, `uplift-json-gen`, `uplift-fq` | plain library poms, translate the dependency lists |
 | `uplift-lambda` | `annotationProcessorPaths` with `uplift-json-gen` |
 | `uplift-flambda` | has a `copy-libs` task; check whether it is still used, drop it if not |
 | `uplift-json-samplegen` | `annotationProcessorPaths` with `uplift-json-gen` |
@@ -407,7 +407,7 @@ Modules and their specifics:
 | `uplift-maven-plugin` | packaging `maven-plugin`, `kotlin-maven-plugin`, `maven-plugin-plugin` |
 
 Publishing subset: the Gradle build publishes only
-`gradle-plugins, synchttp, edam, edamame, flambda, flogs, hash, json, json-anno, json-gen,
+`gradle-plugins, synchttp, edam, edamame, flambda, flogs, main.hash, json, json-anno, json-gen,
 json-mame, kernel, lambda, s3, util, uuid`. Not published: `uplift-fq`, `uplift-json-match`,
 `uplift-json-jmh`, `uplift-synchttp-jmh`, `uplift-json-samplegen`. Set
 `<maven.deploy.skip>true</maven.deploy.skip>` in those five.
@@ -426,10 +426,10 @@ plus a repository entry for GitHub Packages restricted to group
 | Module | Notes |
 | --- | --- |
 | `taninim`, `fb` | library poms; `fb` needs `annotationProcessorPaths` with `uplift-json-gen`, and the restfb exclusions for slf4j and lombok |
-| `kudu`, `yellin` | library poms plus the `native-lambda` goal bound to `package`, with `main` set to `kudu` and `yellin`; `yellin` needs the json-gen processor path |
+| `Main`, `yellin` | library poms plus the `native-lambda` goal bound to `package`, with `main` set to `Main` and `yellin`; `yellin` needs the json-gen processor path |
 | `kudu-server`, `yellin-server` | plain library poms |
-| `lambda-test` | `org.graalvm.buildtools:native-maven-plugin`, direct equivalent of the Gradle plugin, `imageName` and `mainClass` both `localTaninim` |
-| `ascension` | `uplift-maven-plugin` goals, CDK dependencies, zip dependencies on `kudu` and `yellin` as described in section 4 |
+| `lambda-test` | `org.graalvm.buildtools:native-maven-plugin`, direct equivalent of the Gradle plugin, `imageName` and `mainClass` both `LocalTaninim` |
+| `ascension` | `uplift-maven-plugin` goals, CDK dependencies, zip dependencies on `Main` and `yellin` as described in section 4 |
 
 `ascension/gradle.properties` holds `account`, `region`, `profile`, `fbSec` and
 `taninimBucket`. These become plugin parameters. See section 6.
@@ -569,7 +569,7 @@ distribution URI and the complete ordered classpath. If it is identical, the plu
 the same build.
 
 The CDK template contains exactly two 64-hex asset hashes, which are SHA-256 sums of the two
-zips, appearing as `S3Key` values and as `asset.<hash>.zip` file names. Normalise those two
+zips, appearing as `S3Key` values and as `asset.<main.hash>.zip` file names. Normalise those two
 before diffing. Everything else in the template, all ten thousand or so bytes of it, must
 match exactly.
 
@@ -592,7 +592,7 @@ Then the Maven work:
    `target/classes/META-INF/maven/plugin.xml` lists all six goals.
 5. `taninim` parent pom and the library modules.
    Verify: `mvn -f taninim/pom.xml install` with the plugin already installed.
-6. `native-lambda` on `kudu`. Locally verifiable: needs Docker but not AWS.
+6. `native-lambda` on `Main`. Locally verifiable: needs Docker but not AWS.
    Verify with `compare-baseline.sh`: the rendered Dockerfile, the staged classpath and the
    zip structure must match the baseline. Not the zip bytes. See the note above.
 7. `lambda-test` with `native-maven-plugin`.
