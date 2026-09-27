@@ -24,17 +24,17 @@ phase() {
 
 buildUplift() {
     phase "uplift"
-    mvn -B -f "$ROOT/uplift/pom.xml" install "$@"
+    ./mvnw -B -f "$ROOT/uplift/pom.xml" install "$@"
 }
 
 buildTaninim() {
     phase "taninim"
-    mvn -B -f "$ROOT/taninim/pom.xml" install "$@"
+    ./mvnw -B -f "$ROOT/taninim/pom.xml" install "$@"
 }
 
 buildExample() {
     phase "examples/hello-web"
-    mvn -B -f "$ROOT/uplift/examples/hello-web/pom.xml" install "$@"
+    ./mvnw -B -f "$ROOT/uplift/examples/hello-web/pom.xml" install "$@"
 }
 
 case "${1:-all}" in
@@ -57,11 +57,11 @@ example)
     buildExample "$@"
     ;;
 ping)
-    mvn -B -f "$ROOT/taninim/pom.xml" -pl ascension uplift:ping
+    ./mvnw -B -f "$ROOT/taninim/pom.xml" -pl ascension uplift:ping
     ;;
 synth)
     # The whole CDK path, without touching AWS.
-    mvn -B -f "$ROOT/taninim/pom.xml" -pl ascension uplift:init uplift:synth
+    ./mvnw -B -f "$ROOT/taninim/pom.xml" -pl ascension uplift:init uplift:synth
     ;;
 deploy)
     read -r -p "Deploy taninim to AWS? [y/N] " reply
@@ -71,7 +71,7 @@ deploy)
     # The whole chain, as Gradle ran it: uplift dependsOn uplift-bootstrap dependsOn
     # uplift-init. Maven has no task dependencies for directly invoked goals, so the chain
     # is spelled out here.
-    mvn -B -f "$ROOT/taninim/pom.xml" -pl ascension uplift:init uplift:bootstrap uplift:deploy
+    ./mvnw -B -f "$ROOT/taninim/pom.xml" -pl ascension uplift:init uplift:bootstrap uplift:deploy
     ;;
 *)
     echo "usage: $(basename "$0") {all|uplift|taninim|example|ping|synth|deploy}" >&2
