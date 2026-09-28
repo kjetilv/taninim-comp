@@ -1,10 +1,6 @@
 # taninim-comp
 
-Gradle Composite Build of uplift+taninim
-
-# [flopp](https://github.com/kjetilv/flopp)
-
-I/O playground.
+Composite build of uplift+taninim
 
 # [uplift](https://github.com/kjetilv/uplift)
 
