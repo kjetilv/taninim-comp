@@ -6,4 +6,4 @@
 	url = git@github.com:kjetilv/taninim.git
 [submodule "jenesis"]
 	path = jenesis
-	url = https://github.com/jenesis/jenesis
+	url = git@github.com:/jenesis/jenesis
