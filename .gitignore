@@ -15,4 +15,5 @@ build
 /.idea/.gitignore
 
 ### Maven ###
-target/
+target/**
+build/**
